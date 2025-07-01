@@ -36,7 +36,7 @@ run_button = st.sidebar.button("Run Simulation")
 if run_button and uploaded_hourly and uploaded_yearly:
     with st.spinner("Running simulation..."):
 
-        df_profiles = load_profiles()
+        df_profiles = load_profiles(uploaded_hourly, uploaded_yearly)
         wind_profile = df_profiles['wind_profile']
         solar_profile = df_profiles['solar_profile']
 
