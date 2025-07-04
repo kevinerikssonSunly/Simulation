@@ -1,6 +1,6 @@
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 PROFILES_EE = DATA_DIR / "profiles_EE.xlsx"
 PROFILES_LV = DATA_DIR / "profiles_LV.xlsx"
