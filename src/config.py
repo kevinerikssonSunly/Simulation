@@ -7,9 +7,9 @@ DATA_DIR = BASE_DIR / "data"
 
 # Profiles
 PROFILES_EE = DATA_DIR / "profiles_EE.xlsx"
-PROFILES_LV = DATA_DIR / "profiles_LV.csv"
-PROFILES_LT = DATA_DIR / "profiles_LT.csv"
-PROFILES_PL = DATA_DIR / "profiles_PL.csv"
+PROFILES_LV = DATA_DIR / "profiles_LV.xlsx"
+PROFILES_LT = DATA_DIR / "profiles_LT.xlsx"
+PROFILES_PL = DATA_DIR / "profiles_PL.xlsx"
 
 # Yields
 YIELD_EE = DATA_DIR / "YIELD_EE.xlsx"
