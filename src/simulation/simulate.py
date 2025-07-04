@@ -1,38 +1,62 @@
 import pandas as pd
 from openpyxl import load_workbook
-from constraints import PV_CAPACITY_MW, WIND_CAPACITY_MW
+from typing import List
 from models.resource import Wind, PV
 from optimisation.search import simulate_dispatch_per_year
+from utils.profiles import get_profiles
 
 
-def run_all_scenarios(wind_profile, solar_profile, baseload_levels, coverage_levels):
-    excel_path = "/Users/kevineriksson/PycharmProjects/green_baseload_sim/data/Simulator output.xlsx"
+def run_all_scenarios(
+    wind_profile: pd.Series,
+    solar_profile: pd.Series,
+    baseload,
+    output_path: str = "/Users/kevineriksson/PycharmProjects/Simulation/data/Simulator output.xlsx"
+) -> None:
+    """
+    Run dispatch simulation for specified baseload and write the results to an Excel sheet.
 
-    for baseload in baseload_levels:
-        print(f"\nRunning simulation for {baseload}MW")
+    Args:
+        wind_profile: Hourly wind profile (normalized or actual).
+        solar_profile: Hourly solar profile (normalized or actual).
+    """
+    print(f"\nRunning simulation for {baseload} MW baseload...")
 
-        wind = Wind(WIND_CAPACITY_MW, wind_profile)
-        solar = PV(PV_CAPACITY_MW, solar_profile)
+    wind_prod, solar_prod = get_profiles(144, 83)
 
-        wind_prod = wind.get_production()
-        solar_prod = solar.get_production()
+    results = simulate_dispatch_per_year(
+        wind_prod, solar_prod, baseload, 144, 83,
+        0, 0, 144, 0, 0, 0, bess_rte=0.86, hydro_rte=0.9
 
-        result = simulate_dispatch_per_year(wind_prod, solar_prod, baseload, WIND_CAPACITY_MW, PV_CAPACITY_MW)
-        df = pd.DataFrame(result)
+    )
 
-        update_sheet(df, excel_path)
+    #df = pd.DataFrame(results)
+    #append_to_excel(df, output_path)
 
 
-def update_sheet(df, wb_path, base_row=5, start_column=2):
-    wb = load_workbook(wb_path)
+def append_to_excel(
+    df: pd.DataFrame,
+    excel_path: str,
+    start_row: int = 5,
+    start_col: int = 2
+) -> None:
+    """
+    Append a DataFrame to the first empty row of an Excel sheet starting from a specified position.
+
+    Args:
+        df: DataFrame to append.
+        excel_path: Path to the Excel workbook.
+        start_row: Starting row to check for empty space (1-based index).
+        start_col: Starting column to insert data (1-based index).
+    """
+    wb = load_workbook(excel_path)
     ws = wb.active
 
-    current_row = base_row
-    while ws.cell(row=current_row, column=start_column).value is not None:
-        current_row += 1
+    row = start_row
+    while ws.cell(row=row, column=start_col).value is not None:
+        row += 1
 
-    for r_idx, row in enumerate(df.itertuples(index=False), start=current_row):
-        for c_idx, value in enumerate(row, start=start_column):
+    for r_idx, record in enumerate(df.itertuples(index=False), start=row):
+        for c_idx, value in enumerate(record, start=start_col):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
-    wb.save(wb_path)
+    wb.save(excel_path)

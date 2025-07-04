@@ -1,27 +1,8 @@
+from interfaces.StorageUnit import StorageUnit
 
 
-
-
-class PumpedHydroStorage:
-    def __init__(self, charge_MW, storage_volume_MWh, round_trip_eff=0.8):
-        self.max_charge = charge_MW
-        self.max_volume = storage_volume_MWh
-        self.charge_eff = self.discharge_eff = round_trip_eff**0.5
-        self.soc = 0
-
-    def charge(self, to_charge_MWh):
-        chargeable = min(to_charge_MWh, self.max_charge, self.max_volume - self.soc)
-        self.soc += chargeable * self.charge_eff
-        return chargeable
-
-    def discharge(self, needed_energy_MWh):
-        possible_discharge = min(self.max_charge, self.soc)
-        discharged = min(possible_discharge, needed_energy_MWh / self.discharge_eff)
-        self.soc -= discharged
-        return discharged * self.discharge_eff
-
-class BatteryStorage:
-    def __init__(self, charge_MW, storage_volume_MWh, round_trip_eff=0.86):
+class Storage(StorageUnit):
+    def __init__(self, charge_MW, storage_volume_MWh, round_trip_eff):
         self.max_charge = charge_MW
         self.max_volume = storage_volume_MWh
         self.charge_eff = self.discharge_eff = round_trip_eff**0.5
@@ -31,7 +12,6 @@ class BatteryStorage:
 
     def charge(self, to_charge_wind_MWh, to_charge_solar_MWh):
         total_to_charge = to_charge_wind_MWh + to_charge_solar_MWh
-        available_volume = self.max_volume - self.soc
         max_raw_capacity = (self.max_volume - self.soc) / self.charge_eff
         chargeable_raw = min(total_to_charge, self.max_charge, max_raw_capacity)
 
@@ -50,12 +30,17 @@ class BatteryStorage:
         self.total_charged_wind += wind_charged
         self.total_charged_solar += solar_charged
 
-        self.soc += chargeable_raw * self.charge_eff
+        charged = chargeable_raw * self.charge_eff
+        self.soc += charged
+        cycle_loss = chargeable_raw - charged
 
-        return chargeable_raw, redundant_wind, redundant_solar
+        return chargeable_raw, redundant_wind, redundant_solar, cycle_loss
 
     def discharge(self, needed_energy_MWh):
         possible_discharge = min(self.max_charge, self.soc)
-        discharged = min(possible_discharge, needed_energy_MWh / self.discharge_eff)
+        required_discharge = needed_energy_MWh / self.discharge_eff
+        discharged = min(possible_discharge, required_discharge)
         self.soc -= discharged
-        return discharged * self.discharge_eff
+        delivered = discharged * self.discharge_eff
+        cycle_loss = discharged - delivered
+        return delivered, cycle_loss

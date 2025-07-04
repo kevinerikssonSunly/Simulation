@@ -1,7 +1,3 @@
-
-
-
-
 class Wind:
     def __init__(self, capacity_mw, profile_mw_mwh):
         self.cap = capacity_mw
