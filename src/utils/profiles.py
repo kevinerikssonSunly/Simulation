@@ -4,7 +4,7 @@ from models.resource import Wind, PV
 
 
 def get_profiles(wind_cap, solar_cap, profile_file) -> tuple[Any, Any]:
-    df = pd.read_excel(profile_file)
+    df = pd.read_csv(profile_file)
 
     df.set_index('Hour', inplace=True)
 
