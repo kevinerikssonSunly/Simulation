@@ -18,7 +18,8 @@ from optimisation.search import simulate_dispatch_per_year
 st.set_page_config(page_title="Green Baseload Simulator", layout="wide")
 
 st.title("Green Baseload Simulation App")
-
+st.write("Resolved path:", PROFILES_EE)
+st.write("Exists?", PROFILES_EE.exists())
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
 
