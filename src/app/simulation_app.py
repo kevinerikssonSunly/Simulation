@@ -1,19 +1,17 @@
 import os
 import sys
-
-from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT
-from utils.profiles import get_profiles
-
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))  # = /.../green_baseload_sim/src
-
-# Add src to the path if not already included
-if SRC_DIR not in sys.path:
-    sys.path.insert(0, SRC_DIR)
-
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
+
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT
+from utils.profiles import get_profiles
 
 from optimisation.search import simulate_dispatch_per_year
 
