@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 
 # Profiles
-PROFILES_EE = DATA_DIR / "profiles_EE.csv"
+PROFILES_EE = DATA_DIR / "profiles_EE.xlsx"
 PROFILES_LV = DATA_DIR / "profiles_LV.csv"
 PROFILES_LT = DATA_DIR / "profiles_LT.csv"
 PROFILES_PL = DATA_DIR / "profiles_PL.csv"
