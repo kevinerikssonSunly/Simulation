@@ -1,7 +1,9 @@
 from pathlib import Path
 
-# Go from /src/config.py → project root → /data
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Base directory: where this file lives → go up to repo root
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+# Path to the data directory inside the repo
 DATA_DIR = BASE_DIR / "data"
 
 # Profiles
