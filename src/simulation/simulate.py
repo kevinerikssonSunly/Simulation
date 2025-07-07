@@ -23,7 +23,7 @@ def run_all_scenarios(
 
     wind_prod, solar_prod = get_profiles(144, 83)
 
-    results = simulate_dispatch_per_year(
+    results, hourly_df = simulate_dispatch_per_year(
         wind_prod, solar_prod, baseload, 144, 83,
         0, 0, 144, 0, 0, 0, bess_rte=0.86, hydro_rte=0.9
 

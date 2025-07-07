@@ -52,7 +52,7 @@ if run_button:
 
         wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
 
-        results = simulate_dispatch_per_year(wind_prod, solar_prod, baseload, wind_cap, solar_cap,
+        results, hourly_df = simulate_dispatch_per_year(profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
                                              battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage, bess_rte=0.86, hydro_rte=0.9)
 
         result_df = pd.DataFrame(results)
@@ -65,6 +65,10 @@ if run_button:
         csv_buffer = BytesIO()
         result_df.to_csv(csv_buffer, index=False)
         st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
+
+        st.line_chart(hourly_df, x="missing_energy", y="Spot")
+
+        st.line_chart(hourly_df, x="wasted_energy", y="Spot")
 
 else:
     st.info("Please fill fields to begin.")

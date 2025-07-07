@@ -16,7 +16,7 @@ class Storage(StorageUnit):
         chargeable_raw = min(total_to_charge, self.max_charge, max_raw_capacity)
 
         if total_to_charge == 0:
-            return 0.0, 0.0, 0.0
+            return 0.0, 0.0, 0.0, 0.0
 
         wind_fraction = to_charge_wind_MWh / total_to_charge
         solar_fraction = to_charge_solar_MWh / total_to_charge
