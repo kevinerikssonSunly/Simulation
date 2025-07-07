@@ -254,7 +254,7 @@ def compile_result(
         "vwap_excess": round(vwap_excess, 2),
         "redundant_wind_total": round(m["redundant_wind"]),
         "redundant_solar_total": round(m["redundant_solar"]),
-        "missing_energy_total": round(m["missing_energy"]),
+        "missing_energy_total": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
         "green_energy_share_%": round((m["produced_total"] / expected) * 100) if expected else 0,
         "actual_green_baseload_hours_%": round((m["hours_met"] / hours) * 100) if hours else 0,
         "redundant_wind_share_%": round((m["redundant_wind"] / wind_total) * 100) if wind_total else 0,
