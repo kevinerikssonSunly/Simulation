@@ -9,6 +9,7 @@ if __name__ == "__main__":
     df_profiles = pd.read_excel(path)
     wind_profile = df_profiles['wind_profile']
     solar_profile = df_profiles['solar_profile']
+    run_all_scenarios(PROFILES_EE, wind_profile, solar_profile, 40)
 
 '''
     baseload = 40#input("Enter baseload (MW): ")
@@ -21,5 +22,5 @@ if __name__ == "__main__":
     battery_8h = 0#input("8h Battery Capacity (MW)")
     hydro_storage = 0#input("Hydro Storage (MW)")
 
-    #run_all_scenarios(wind_profile, solar_profile, baseload)
+    run_all_scenarios(wind_profile, solar_profile, baseload)
 '''

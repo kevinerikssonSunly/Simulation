@@ -1,7 +1,9 @@
 from typing import List, Dict, Any
 import pandas as pd
 from pandas import DataFrame
+from streamlit import dataframe
 
+from config import test
 from interfaces.StorageUnit import StorageUnit
 from models.storage import Storage
 
@@ -31,6 +33,7 @@ def simulate_dispatch_per_year(
     """
     global hourly_df
     results_by_year = []
+    all_hourly_dfs = []
     years = wind_prod.index.year.unique()
 
     battery_config = {
@@ -82,7 +85,6 @@ def simulate_dispatch_per_year(
             wind = round(wind_year.iloc[hour], 3)
             solar = round(solar_year.iloc[hour], 3)
             total_gen = wind + solar
-            cycle_loss_total = 0
 
             if total_gen >= baseload:
                 wind_share, solar_share = baseload_allocation(wind, solar, baseload)
@@ -149,12 +151,16 @@ def simulate_dispatch_per_year(
                 "Spot": df.loc[wind_year.index[hour], "Spot"]
             })
 
-            metrics["missing_energy"] -= max(metrics["missing_energy"] - cycle_loss_total, 0)
-
         hourly_df = pd.DataFrame(hourly_records).set_index("timestamp")
+
+        metrics["missing_energy"] -= max(cycle_loss_total, 0)
+
 
         vwap_missing = vwap_energy(hourly_df, "missing_energy", "Spot")
         vwap_excess = vwap_energy(hourly_df, "wasted_energy", "Spot")
+
+        export_df = hourly_df[["missing_energy", "wasted_energy", "Spot"]].copy()
+        export_df.to_excel(f"test_{year}.xlsx", index=False)
 
         result = compile_result(
             year,
@@ -175,7 +181,11 @@ def simulate_dispatch_per_year(
             metrics
         )
         results_by_year.append(result)
-    return results_by_year, hourly_df
+        all_hourly_dfs.append(hourly_df)
+
+    full_hourly_df = pd.concat(all_hourly_dfs)
+
+    return results_by_year, full_hourly_df
 
 
 def baseload_allocation(wind: float, solar: float, baseload: float) -> (float, float):
@@ -188,14 +198,15 @@ def baseload_allocation(wind: float, solar: float, baseload: float) -> (float, f
     )
 
 def vwap_energy(df: pd.DataFrame, energy_col: str, price_col: str) -> float:
-    # Filter rows where there is missing energy
-    filtered = df[df[energy_col] > 0].copy()
+    # Drop rows with NaNs and filter only where energy > 0
+    filtered = df.dropna(subset=[energy_col, price_col])
+    filtered = filtered[filtered[energy_col] > 0]
 
-    if filtered.empty:
-        return 0.0  # or float('nan') depending on preference
+    if filtered.empty or filtered[energy_col].sum() == 0:
+        return 0.0
 
     vwap = (filtered[energy_col] * filtered[price_col]).sum() / filtered[energy_col].sum()
-    return vwap
+    return round(vwap, 4)
 
 def allocate_surplus(wind: float, solar: float, surplus: float) -> (float, float):
     total = wind + solar
@@ -250,12 +261,13 @@ def compile_result(
         "baseload": baseload,
         "wind_total": round(wind_total),
         "solar_total": round(solar_total),
-        "vwap_missing": round(vwap_missing, 2),
+        "vwap_missing": round(vwap_missing, 6),
         "vwap_excess": round(vwap_excess, 2),
         "redundant_wind_total": round(m["redundant_wind"]),
         "redundant_solar_total": round(m["redundant_solar"]),
         "missing_energy_total": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
-        "green_energy_share_%": round((m["produced_total"] / expected) * 100) if expected else 0,
+        "green_energy_share_%": round((m["produced_total"] / expected) * 100, 2)
+        if expected > 0 and pd.notna(m["produced_total"]) else 0.0,
         "actual_green_baseload_hours_%": round((m["hours_met"] / hours) * 100) if hours else 0,
         "redundant_wind_share_%": round((m["redundant_wind"] / wind_total) * 100) if wind_total else 0,
         "redundant_solar_share_%": round((m["redundant_solar"] / solar_total) * 100) if solar_total else 0,

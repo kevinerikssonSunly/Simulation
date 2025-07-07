@@ -15,9 +15,9 @@ from utils.profiles import get_profiles
 
 from optimisation.search import simulate_dispatch_per_year
 
-st.set_page_config(page_title="Green Baseload Simulator", layout="wide")
+st.set_page_config(page_title="Sunly Baseload Simulator", layout="wide")
 
-st.title("Green Baseload Simulation App")
+st.title("Sunly Baseload Simulation App")
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
@@ -47,12 +47,43 @@ with st.sidebar.expander("Battery Storage Settings"):
 
 run_button = st.sidebar.button("Run Simulation")
 
+def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int = 5) -> pd.DataFrame:
+    """
+    Summarizes average missing and wasted energy grouped by year and fixed Spot price intervals.
+
+    Args:
+        df (pd.DataFrame): DataFrame with columns "Spot", "missing_energy", "wasted_energy"
+                           and a datetime index.
+        price_col (str): Column name for price (default is "Spot").
+        step (int): Step size in euros for price binning (default is 5€ bins).
+
+    Returns:
+        pd.DataFrame: Multi-year summary with average missing/wasted energy by year and price bin.
+    """
+    df = df.copy()
+    if not isinstance(df.index, pd.DatetimeIndex):
+        raise ValueError("DataFrame index must be a DatetimeIndex.")
+
+    # Extract year and price bin
+    df["year"] = df.index.year
+    df["price_bin"] = (df[price_col] // step) * step
+
+    # Group by year and price bin, compute averages
+    summary = (
+        df.groupby(["year", "price_bin"])[["missing_energy", "wasted_energy"]]
+        .mean()
+        .reset_index()
+        .sort_values(["year", "price_bin"])
+    )
+
+    return summary
+
 if run_button:
     with st.spinner("Running simulation..."):
 
         wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
 
-        results, hourly_df = simulate_dispatch_per_year(profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
+        results, yearly_df = simulate_dispatch_per_year(profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
                                              battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage, bess_rte=0.86, hydro_rte=0.9)
 
         result_df = pd.DataFrame(results)
@@ -66,9 +97,17 @@ if run_button:
         result_df.to_csv(csv_buffer, index=False)
         st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
 
-        st.line_chart(hourly_df, x="missing_energy", y="Spot")
+        summary_df = summarize_by_price_step(yearly_df)
 
-        st.line_chart(hourly_df, x="wasted_energy", y="Spot")
+        tab_titles = [f"Year {year}" for year in summary_df["year"].unique()]
+        tabs = st.tabs(tab_titles)
 
+        for tab, year in zip(tabs, summary_df["year"].unique()):
+            with tab:
+                st.subheader(f"Charts for Year {year}")
+                year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
+                st.bar_chart(year_data["missing_energy"])
+                st.bar_chart(year_data["wasted_energy"])
 else:
     st.info("Please fill fields to begin.")
+

@@ -5,8 +5,8 @@ from models.resource import Wind, PV
 from optimisation.search import simulate_dispatch_per_year
 from utils.profiles import get_profiles
 
-
 def run_all_scenarios(
+    profiles: pd.DataFrame,
     wind_profile: pd.Series,
     solar_profile: pd.Series,
     baseload,
@@ -21,17 +21,27 @@ def run_all_scenarios(
     """
     print(f"\nRunning simulation for {baseload} MW baseload...")
 
-    wind_prod, solar_prod = get_profiles(144, 83)
+    wind_prod, solar_prod = get_profiles(44, 183, profiles)
 
     results, hourly_df = simulate_dispatch_per_year(
-        wind_prod, solar_prod, baseload, 144, 83,
-        0, 0, 144, 0, 0, 0, bess_rte=0.86, hydro_rte=0.9
-
+        profile_file=profiles,
+        wind_prod=wind_prod,
+        solar_prod=solar_prod,
+        baseload=baseload,
+        wind_cap=44,
+        solar_cap=183,
+        battery_1h_mw=0,
+        battery_2h_mw=0,
+        battery_4h_mw=150,
+        battery_6h_mw=0,
+        battery_8h_mw=0,
+        hydro_mw=0,
+        bess_rte=0.86,
+        hydro_rte=0.9
     )
 
-    #df = pd.DataFrame(results)
-    #append_to_excel(df, output_path)
-
+    df = pd.DataFrame(results)
+    append_to_excel(df, output_path)
 
 def append_to_excel(
     df: pd.DataFrame,
