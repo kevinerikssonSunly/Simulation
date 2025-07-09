@@ -55,10 +55,9 @@ def simulate_dispatch_per_year(
     storages = create_storages(battery_config, hydro_config, bess_rte, hydro_rte)
 
     for year in years:
-        wind_year = wind_prod[wind_prod.index.year == year]
-        solar_year = solar_prod[solar_prod.index.year == year]
-        total_hours = len(wind_year)
-
+        wind_prod_year = wind_prod[wind_prod.index.year == year]
+        solar_prod_year = solar_prod[solar_prod.index.year == year]
+        spot_price_year = df.loc[df.index.year == year, "Spot"]
 
         metrics = {
             "produced_total": 0.0,
@@ -73,113 +72,9 @@ def simulate_dispatch_per_year(
             "charged_solar": 0.0,
         }
 
-        cycle_loss_total = 0.0
-        hourly_records = []
+        result, hourly_df = simulate_year_dispatch(metrics, year, wind_prod_year, solar_prod_year, df,
+                                                       storages, baseload, wind_cap, solar_cap, battery_config, hydro_config)
 
-        wind_total = wind_year.sum()
-        solar_total = solar_year.sum()
-
-        for hour in range(total_hours):
-            missing_energy_this_hour = 0.0
-            wasted_energy_this_hour = 0.0
-            wind = round(wind_year.iloc[hour], 3)
-            solar = round(solar_year.iloc[hour], 3)
-            total_gen = wind + solar
-
-            if total_gen >= baseload:
-                wind_share, solar_share = baseload_allocation(wind, solar, baseload)
-                metrics["wind_in_baseload"] += round(wind_share,3)
-                metrics["solar_in_baseload"] += round(solar_share,3)
-                metrics["produced_total"] += round(baseload)
-                metrics["hours_met"] += 1
-
-                surplus = round(total_gen, 3) - baseload
-
-                wind_surplus, solar_surplus = allocate_surplus(wind, solar, surplus)
-
-                charged_total = 0.0
-                initial_wind_surplus = wind_surplus
-                initial_solar_surplus = solar_surplus
-
-                for storage in storages:
-                    charged, redundant_wind, redundant_solar, cycle_loss = storage.charge(wind_surplus, solar_surplus)
-
-                    cycle_loss_total += cycle_loss
-                    charged_total += charged
-
-                    wind_surplus = redundant_wind
-                    solar_surplus = redundant_solar
-
-                    if wind_surplus == 0 and solar_surplus == 0:
-                        break
-
-                metrics["charged_wind"] += initial_wind_surplus - wind_surplus
-                metrics["charged_solar"] += initial_solar_surplus - solar_surplus
-                metrics["redundant_wind"] += wind_surplus
-                metrics["redundant_solar"] += solar_surplus
-                wasted_energy_this_hour = max(surplus - charged_total, 0.0)
-                metrics["wasted_energy"] += wasted_energy_this_hour
-
-            else:
-                shortfall = baseload - total_gen
-                discharged_total = 0.0
-
-                for storage in storages:
-                    if shortfall <= 0:
-                        break
-
-                    discharged, cycle_loss = storage.discharge(shortfall)
-
-                    discharged_total += discharged
-                    cycle_loss_total += cycle_loss
-
-                    shortfall -= discharged
-                produced = total_gen + discharged_total
-                metrics["produced_total"] += round(produced, 3)
-
-                if produced >= baseload:
-                    metrics["hours_met"] += 1
-                    missing_energy_this_hour = 0.0
-                else:
-                    missing_energy_this_hour = baseload - produced
-                    metrics["missing_energy"] += missing_energy_this_hour
-
-            hourly_records.append({
-                "timestamp": wind_year.index[hour],
-                "missing_energy": missing_energy_this_hour,
-                "wasted_energy": wasted_energy_this_hour,
-                "Spot": df.loc[wind_year.index[hour], "Spot"]
-            })
-
-        hourly_df = pd.DataFrame(hourly_records).set_index("timestamp")
-
-        metrics["missing_energy"] -= max(cycle_loss_total, 0)
-
-
-        vwap_missing = vwap_energy(hourly_df, "missing_energy", "Spot")
-        vwap_excess = vwap_energy(hourly_df, "wasted_energy", "Spot")
-
-        export_df = hourly_df[["missing_energy", "wasted_energy", "Spot"]].copy()
-        export_df.to_excel(f"test_{year}.xlsx", index=False)
-
-        result = compile_result(
-            year,
-            wind_cap,
-            solar_cap,
-            baseload,
-            total_hours,
-            battery_1h_mw,
-            battery_2h_mw,
-            battery_4h_mw,
-            battery_6h_mw,
-            battery_8h_mw,
-            hydro_mw,
-            wind_total,
-            solar_total,
-            vwap_missing,
-            vwap_excess,
-            metrics
-        )
         results_by_year.append(result)
         all_hourly_dfs.append(hourly_df)
 
@@ -187,6 +82,117 @@ def simulate_dispatch_per_year(
 
     return results_by_year, full_hourly_df
 
+def simulate_year_dispatch(metrics: Dict[str, Any],
+                           year: int,
+                           wind_year: pd.Series,
+                           solar_year: pd.Series,
+                           spot_prices: pd.DataFrame,
+                           storages: List[StorageUnit],
+                           baseload: float,
+                           wind_cap: float,
+                           solar_cap: float,
+                           battery_config: Dict[int, float],
+                           hydro_config: Dict[str, Any]) -> tuple[Dict, pd.DataFrame]:
+    total_hours = len(wind_year)
+    wind_total = wind_year.sum()
+    solar_total = solar_year.sum()
+
+    hourly_records = []
+    cycle_loss_total = 0.0
+
+    for hour in range(total_hours):
+        wind = round(wind_year.iloc[hour], 3)
+        solar = round(solar_year.iloc[hour], 3)
+        timestamp = wind_year.index[hour]
+        spot = spot_prices.loc[timestamp, "Spot"]
+
+        result, cycle_loss = simulate_hour(wind, solar, storages, baseload, metrics)
+        result["timestamp"] = timestamp
+        result["Spot"] = spot
+
+        hourly_records.append(result)
+        cycle_loss_total += cycle_loss
+
+    metrics["missing_energy"] -= max(cycle_loss_total, 0)
+
+    hourly_df = pd.DataFrame(hourly_records).set_index("timestamp")
+    vwap_missing = vwap_energy(hourly_df, "missing_energy", "Spot")
+    vwap_excess = vwap_energy(hourly_df, "wasted_energy", "Spot")
+
+    return (
+        compile_result(
+            year, wind_cap, solar_cap, baseload, total_hours,
+            battery_config[1], battery_config[2], battery_config[4],
+            battery_config[6], battery_config[8], hydro_config["charge_mw"],
+            wind_total, solar_total, vwap_missing, vwap_excess, metrics
+        ),
+        hourly_df
+    )
+
+def simulate_hour(
+        wind: float,
+        solar: float,
+        storages: List[StorageUnit],
+        baseload: float,
+        metrics: Dict
+) -> tuple[Dict[str, float], float]:
+
+    total_gen = wind + solar
+    missing_energy = wasted_energy = 0.0
+    cycle_loss_total = 0.0
+
+    if total_gen >= baseload:
+        wind_share, solar_share = baseload_allocation(wind, solar, baseload)
+        surplus = total_gen - baseload
+
+        metrics["wind_in_baseload"] += wind_share
+        metrics["solar_in_baseload"] += solar_share
+        metrics["produced_total"] += baseload
+        metrics["hours_met"] += 1
+
+        wind_surplus, solar_surplus = allocate_surplus(wind, solar, surplus)
+        initial_wind_surplus, initial_solar_surplus = wind_surplus, solar_surplus
+        charged_total = 0.0
+
+        for storage in storages:
+            charged, wind_surplus, solar_surplus, loss = storage.charge(wind_surplus, solar_surplus)
+            charged_total += charged
+            cycle_loss_total += loss
+            if wind_surplus == 0 and solar_surplus == 0:
+                break
+
+        metrics["charged_wind"] += initial_wind_surplus - wind_surplus
+        metrics["charged_solar"] += initial_solar_surplus - solar_surplus
+        metrics["redundant_wind"] += wind_surplus
+        metrics["redundant_solar"] += solar_surplus
+        wasted_energy = max(surplus - charged_total, 0.0)
+        metrics["wasted_energy"] += wasted_energy
+
+    else:
+        shortfall = baseload - total_gen
+        discharged_total = 0.0
+
+        for storage in storages:
+            if shortfall <= 0:
+                break
+            discharged, loss = storage.discharge(shortfall)
+            discharged_total += discharged
+            cycle_loss_total += loss
+            shortfall -= discharged
+
+        produced = total_gen + discharged_total
+        metrics["produced_total"] += produced
+
+        if produced >= baseload:
+            metrics["hours_met"] += 1
+        else:
+            missing_energy = baseload - produced
+            metrics["missing_energy"] += missing_energy
+
+    return {
+        "missing_energy": missing_energy,
+        "wasted_energy": wasted_energy
+    }, cycle_loss_total
 
 def baseload_allocation(wind: float, solar: float, baseload: float) -> (float, float):
     total = wind + solar
@@ -198,7 +204,6 @@ def baseload_allocation(wind: float, solar: float, baseload: float) -> (float, f
     )
 
 def vwap_energy(df: pd.DataFrame, energy_col: str, price_col: str) -> float:
-    # Drop rows with NaNs and filter only where energy > 0
     filtered = df.dropna(subset=[energy_col, price_col])
     filtered = filtered[filtered[energy_col] > 0]
 
@@ -216,6 +221,7 @@ def allocate_surplus(wind: float, solar: float, surplus: float) -> (float, float
         surplus * (wind / total),
         surplus * (solar / total)
     )
+
 def create_storages(battery_config: Dict, hydro_config: Dict, bess_rte, hydro_rte) -> List[StorageUnit]:
     storages = []
 
@@ -250,6 +256,22 @@ def compile_result(
     expected = baseload * hours
     return {
         "year": year,
+        "BL price, EUR/MWh": "",
+        "BL break-even, EUR/MWh": "",
+        "Annual avg sport, EUR/MWh": "",
+        "Missing energy VWAP, EUR/MWh": round(vwap_missing, 6),
+        "Excess energy VWAP, EUR/MWh": round(vwap_excess, 2),
+        "redundant_wind_total": round(m["redundant_wind"]),
+        "redundant_solar_total": round(m["redundant_solar"]),
+        "Missing energy, MWh": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
+        "Wind prod, MWh": round(wind_total),
+        "Solar prod, MWh": round(solar_total),
+        "Res share in BL, %": round((m["produced_total"] / expected) * 100, 2) if expected > 0 and pd.notna(m["produced_total"]) else 0.0,
+        "Nr of green BL hours, h": round((m["hours_met"] / hours) * 100) if hours else 0,
+        "Wind cap price, EUR/MWh": "",
+        "PV cap price, EUR/MWh": "",
+        "Baseload, MWh": baseload,
+        "excess_energy_%": round(((m["redundant_wind"] + m["redundant_solar"]) / expected) * 100) if expected else 0,
         "wind_capacity": round(wind_cap),
         "solar_capacity": round(solar_cap),
         "BESS_1h_CHARGE_MW": battery_1h_mw,
@@ -258,18 +280,4 @@ def compile_result(
         "BESS_6h_CHARGE_MW": battery_6h_mw,
         "BESS_8h_CHARGE_MW": battery_8h_mw,
         "pumped Hydro": hydro_mw,
-        "baseload": baseload,
-        "wind_total": round(wind_total),
-        "solar_total": round(solar_total),
-        "vwap_missing": round(vwap_missing, 6),
-        "vwap_excess": round(vwap_excess, 2),
-        "redundant_wind_total": round(m["redundant_wind"]),
-        "redundant_solar_total": round(m["redundant_solar"]),
-        "missing_energy_total": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
-        "green_energy_share_%": round((m["produced_total"] / expected) * 100, 2)
-        if expected > 0 and pd.notna(m["produced_total"]) else 0.0,
-        "actual_green_baseload_hours_%": round((m["hours_met"] / hours) * 100) if hours else 0,
-        "redundant_wind_share_%": round((m["redundant_wind"] / wind_total) * 100) if wind_total else 0,
-        "redundant_solar_share_%": round((m["redundant_solar"] / solar_total) * 100) if solar_total else 0,
-        "excess_energy_%": round(((m["redundant_wind"] + m["redundant_solar"]) / expected) * 100) if expected else 0,
     }

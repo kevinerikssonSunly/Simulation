@@ -106,7 +106,9 @@ if run_button:
             with tab:
                 st.subheader(f"Charts for Year {year}")
                 year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
+                st.markdown("Missing Energy")
                 st.bar_chart(year_data["missing_energy"])
+                st.markdown("Wasted Energy")
                 st.bar_chart(year_data["wasted_energy"])
 else:
     st.info("Please fill fields to begin.")
