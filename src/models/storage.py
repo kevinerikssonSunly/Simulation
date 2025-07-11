@@ -1,3 +1,5 @@
+import pandas as pd
+
 from interfaces.StorageUnit import StorageUnit
 
 
@@ -9,6 +11,9 @@ class Storage(StorageUnit):
         self.soc = 0
         self.total_charged_wind = 0
         self.total_charged_solar = 0
+        self.discharge_limit_per_day = 2 * storage_volume_MWh
+        self.daily_discharged_energy = 0
+        self.last_updated_day = None
 
     def charge(self, to_charge_wind_MWh, to_charge_solar_MWh):
         total_to_charge = to_charge_wind_MWh + to_charge_solar_MWh
@@ -36,11 +41,24 @@ class Storage(StorageUnit):
 
         return chargeable_raw, redundant_wind, redundant_solar, cycle_loss
 
-    def discharge(self, needed_energy_MWh):
+    def discharge(self, needed_energy_MWh, timestamp):
+        current_day = timestamp.date()
+        if self.last_updated_day != current_day:
+            self.daily_discharged_energy = 0.0
+            self.last_updated_day = current_day
+
+        remaining_quota = self.discharge_limit_per_day - self.daily_discharged_energy
+        if remaining_quota <= 0:
+            return 0.0, 0.0
+
         possible_discharge = min(self.max_charge, self.soc)
         required_discharge = needed_energy_MWh / self.discharge_eff
-        discharged = min(possible_discharge, required_discharge)
+        discharged = min(possible_discharge, required_discharge, remaining_quota)
+
         self.soc -= discharged
+        self.daily_discharged_energy += discharged
+
         delivered = discharged * self.discharge_eff
         cycle_loss = discharged - delivered
+
         return delivered, cycle_loss
