@@ -19,7 +19,6 @@ st.set_page_config(page_title="Sunly Baseload Simulator", layout="wide")
 
 st.title("Sunly Baseload Simulation App")
 
-# --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
 
 profile_files = {

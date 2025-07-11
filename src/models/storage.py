@@ -4,7 +4,7 @@ from interfaces.StorageUnit import StorageUnit
 
 
 class Storage(StorageUnit):
-    def __init__(self, charge_MW, storage_volume_MWh, round_trip_eff):
+    def __init__(self, charge_MW, storage_volume_MWh, round_trip_eff, name):
         self.max_charge = charge_MW
         self.max_volume = storage_volume_MWh
         self.charge_eff = self.discharge_eff = round_trip_eff**0.5
@@ -13,7 +13,9 @@ class Storage(StorageUnit):
         self.total_charged_solar = 0
         self.discharge_limit_per_day = 2 * storage_volume_MWh
         self.daily_discharged_energy = 0
+        self.yearly_discharged_energy = 0
         self.last_updated_day = None
+        self.name = name
 
     def charge(self, to_charge_wind_MWh, to_charge_solar_MWh):
         total_to_charge = to_charge_wind_MWh + to_charge_solar_MWh
@@ -57,8 +59,12 @@ class Storage(StorageUnit):
 
         self.soc -= discharged
         self.daily_discharged_energy += discharged
+        self.yearly_discharged_energy += discharged
 
         delivered = discharged * self.discharge_eff
         cycle_loss = discharged - delivered
 
         return delivered, cycle_loss
+
+    def get_average_cycles_per_year(self):
+        return self.yearly_discharged_energy / self.max_volume if self.max_volume > 0 else 0

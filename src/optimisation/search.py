@@ -86,6 +86,7 @@ def simulate_dispatch_per_year(
             "solar_in_baseload": 0.0,
             "charged_wind": 0.0,
             "charged_solar": 0.0,
+            "discharged": 0.0,
             "cycle_loss": 0.0,
             "wind_price": wind_price,
             "solar_price": solar_price,
@@ -119,6 +120,11 @@ def simulate_dispatch_per_year(
 
         results_by_year.append(result)
         all_hourly_dfs.append(hourly_df)
+
+        for i, storage in enumerate(storages[:-1] if hydro_config["enabled"] else storages):
+            yearly_cycles = storage.get_average_cycles_per_year()
+            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
+            result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 
@@ -156,7 +162,6 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
         cycle_loss_total += cycle_loss
 
 
-    #Lisada tulp nimega cycle loss total
     metrics["cycle_loss_total"] = cycle_loss_total
     metrics["missing_energy"] -= cycle_loss_total
 
@@ -189,7 +194,7 @@ def simulate_hour(
     total_gen = wind + solar
     missing_energy = excess_energy = 0.0
     cycle_loss_total = 0.0
-    grid_cap = 183
+    grid_cap = GRID_CONNECTION
 
     if total_gen >= baseload:
         wind_in_baseload, solar_in_baseload = share_allocation(wind, solar, baseload)
@@ -284,7 +289,7 @@ def create_storages(battery_config: Dict, hydro_config: Dict, bess_rte, hydro_rt
 
     for duration, charge_mw in battery_config.items():
         volume = charge_mw * duration
-        storages.append(Storage(charge_mw, volume, bess_rte))
+        storages.append(Storage(charge_mw, volume, bess_rte, name=f"BESS {duration}h"))
 
     if hydro_config["enabled"]:
         storages.append(Storage(hydro_config["charge_mw"], hydro_config["volume_mwh"], hydro_rte))
@@ -317,7 +322,7 @@ def compile_result(
         "year": year,
         "BL price, EUR/MWh": "",
         "BL break-even, EUR/MWh": "",
-        "Annual avg sport, EUR/MWh": "",
+        "Annual avg spot, EUR/MWh": "",
         "Res share in BL, %": round((m["produced_total"] / expected_baseload) * 100, 2) if expected_baseload > 0 and pd.notna(
             m["produced_total"]) else 0.0,
         "Nr of green BL hours, h": m["hours_met"],
@@ -335,6 +340,12 @@ def compile_result(
         "Excess solar, MWh": round(m["excess_solar"]),
         "Redundant wind, MWh": round(m["redundant_wind"]),
         "Redundant solar, MWh": round(m["redundant_solar"]),
+        "BESS 1h avg cycles": "",
+        "BESS 2h avg cycles": "",
+        "BESS 4h avg cycles": "",
+        "BESS 6h avg cycles": "",
+        "BESS 8h avg cycles": "",
+
 
         "wind_capacity": round(wind_cap),
         "solar_capacity": round(solar_cap),

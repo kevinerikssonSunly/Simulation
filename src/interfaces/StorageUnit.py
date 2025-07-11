@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 
+import pandas as pd
+
+
 class StorageUnit(ABC):
     @abstractmethod
     def charge(self, wind: float, solar: float) -> tuple[float, float, float, float]:
@@ -7,6 +10,11 @@ class StorageUnit(ABC):
         pass
 
     @abstractmethod
-    def discharge(self, shortfall: float) -> tuple[float, float]:
+    def discharge(self, shortfall: float, timestamp: pd.Timestamp) -> tuple[float, float]:
         """Returns: discharged_energy, cycle_loss"""
+        pass
+
+    @abstractmethod
+    def get_average_cycles_per_year(self) -> float:
+        """Returns: average cycles per year"""
         pass
