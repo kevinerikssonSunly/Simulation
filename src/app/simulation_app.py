@@ -4,8 +4,6 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-from constraints import GRID_CONNECTION
-
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
@@ -52,7 +50,7 @@ with st.sidebar:
 
         col5, col6 = st.columns(2)
         with col5:
-            baseload = st.number_input("Target Baseload (MW), Min 1 - Max 183 MW", min_value=1, max_value=GRID_CONNECTION, value=1)
+            baseload = st.number_input("Target Baseload (MW), Min 1 - Max 183 MW", min_value=1, max_value=183, value=1)
         with col6:
             missing_energy_price = st.number_input("Missing Energy Price (MW)", min_value=0, value=0)
 with st.sidebar.expander("Battery Storage Settings"):
