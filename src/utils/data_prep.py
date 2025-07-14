@@ -41,6 +41,8 @@ def load_profiles(data_hourly, data_yearly
     df_hourly[['Hour', 'Year', 'wind_profile', 'solar_profile']].to_excel('/Users/kevineriksson/PycharmProjects/Simulation/data/profiles_LV.xlsx', index=False)
     return df_hourly[['Year', 'wind_profile', 'solar_profile']]
 
-if __name__ == "__main__":
+def extract_from_file(file) -> pd.DataFrame:
+    df = pd.read_excel(file)
+    df.dropna(how='all', inplace=True)
+    return df
 
-    load_profiles(PV_WIND_PROD_PL, YIELD_PL)

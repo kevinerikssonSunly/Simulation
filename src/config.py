@@ -23,4 +23,6 @@ PV_WIND_PROD_LV = DATA_DIR / "PV_WIND_PROD_LV.xlsx"
 PV_WIND_PROD_LT = DATA_DIR / "PV_WIND_PROD_LT.xlsx"
 PV_WIND_PROD_PL = DATA_DIR / "PV_WIND_PROD_PL.xlsx"
 
+SIMULATION_INPUT = DATA_DIR / "simulation_input.xlsx"
+
 test = DATA_DIR / "test.xlsx"

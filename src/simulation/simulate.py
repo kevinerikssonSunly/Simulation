@@ -2,7 +2,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from typing import List
 from models.resource import Wind, PV
-from optimisation.search import simulate_dispatch_per_year
+from simulation.simulate_dispatch import simulate_dispatch
 from utils.profiles import get_profiles
 
 def run_all_scenarios(
@@ -23,7 +23,7 @@ def run_all_scenarios(
 
     wind_prod, solar_prod = get_profiles(44, 183, profiles)
 
-    results, hourly_df = simulate_dispatch_per_year(
+    results, hourly_df = simulate_dispatch(
         profile_file=profiles,
         wind_prod=wind_prod,
         solar_prod=solar_prod,
