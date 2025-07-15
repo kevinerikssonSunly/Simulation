@@ -9,7 +9,6 @@ from simulation.storage_factory import create_storages
 from utils.calculations import calculate_break_even_price_1, calculate_break_even_price_2, \
     calculate_bl_price_1, calculate_bl_price_2, calculate_overproduction_share
 
-
 def simulate_dispatch(
     profile_file,
     grid_connection,
@@ -79,8 +78,8 @@ def simulate_dispatch(
 
         excess_energy = result["Excess wind, MWh"] + result["Excess solar, MWh"]
         redundant_energy = result["Redundant wind, MWh"] + result["Redundant solar, MWh"]
-        bl_price_1 = calculate_bl_price_1(result["Wind in BL"], wind_price, result["Solar in BL"], solar_price, total_storage_cost, result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year) )
-        bl_price_2 = calculate_bl_price_2(result["Wind in BL"], wind_price, result["Solar in BL"], solar_price, total_storage_cost, result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year) )
+        bl_price_1 = calculate_bl_price_1(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"], solar_price, total_storage_cost, result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year) )
+        bl_price_2 = calculate_bl_price_2(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"], solar_price, total_storage_cost, result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year) )
 
         brake_even_1 = calculate_break_even_price_1(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, excess_energy, result["Excess energy VWAP, EUR/MWh"], result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year))
         brake_even_2 = calculate_break_even_price_2(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, excess_energy, result["Excess energy VWAP, EUR/MWh"], result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year))
@@ -97,8 +96,9 @@ def simulate_dispatch(
 
         for i, storage in enumerate(storages[:-1] if hydro_config["enabled"] else storages):
             yearly_cycles = storage.get_average_cycles_per_year()
-            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
+            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 25)
             result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
+            storage.reset_yearly_energy()
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 

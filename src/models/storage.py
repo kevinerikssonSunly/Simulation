@@ -68,3 +68,6 @@ class Storage(StorageUnit):
 
     def get_average_cycles_per_year(self):
         return self.yearly_discharged_energy / self.max_volume if self.max_volume > 0 else 0
+
+    def reset_yearly_energy(self):
+        self.yearly_discharged_energy = 0.0

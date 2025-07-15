@@ -74,8 +74,8 @@ def compile_result(
         "Cycle loss, MWh": round(m["cycle_loss_total"], 2),
         "Wind prod, MWh": round(wind_total),
         "Solar prod, MWh": round(solar_total),
-        "Wind in BL": round(wind_baseload),
-        "Solar in BL": round(solar_baseload),
+        "Wind in BL, MWh": round(wind_baseload),
+        "Solar in BL, MWh": round(solar_baseload),
         "Excess wind, MWh": round(m["excess_wind"]),
         "Excess solar, MWh": round(m["excess_solar"]),
         "Redundant wind, MWh": round(m["redundant_wind"]),
@@ -85,6 +85,7 @@ def compile_result(
         "BESS 4h avg cycles": "",
         "BESS 6h avg cycles": "",
         "BESS 8h avg cycles": "",
+        "Hydro avg cycles": "",
 
         "wind_capacity": round(wind_cap),
         "solar_capacity": round(solar_cap),

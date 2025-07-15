@@ -3,7 +3,6 @@ import os
 import sys
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 from io import BytesIO
 
 from simulation.simulate_dispatch import simulate_dispatch
@@ -47,6 +46,14 @@ container = st.container()
 def validate_pair(name: str, capacity: int, price: int):
     if (capacity > 0 and price == 0) or (price > 0 and capacity == 0):
         st.error(f"⚠️ Both capacity and price must be > 0 for {name} if either is filled.")
+
+with st.sidebar:
+    with st.expander("Results field explinations"):
+        st.markdown("BL 1 – Effective cost of delivered baseload (incl. storage + missing energy at VWAP)")
+        st.markdown("BL 2 – Effective cost of delivered baseload using fixed missing energy")
+        st.markdown("Break-even Price 1 – Total baseload cost per MWh using fixed price for missing energy")
+        st.markdown("Break-even Price 2 – Total baseload cost per MWh using VWAP for missing energy")
+
 
 if simulation_mode == "Manual Input":
     with st.sidebar:

@@ -18,3 +18,8 @@ class StorageUnit(ABC):
     def get_average_cycles_per_year(self) -> float:
         """Returns: average cycles per year"""
         pass
+
+    @abstractmethod
+    def reset_yearly_energy(self) -> float:
+        """Resets yearly energy"""
+        pass

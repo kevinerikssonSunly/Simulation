@@ -12,6 +12,6 @@ def create_storages(battery_config: Dict, hydro_config: Dict, bess_rte, hydro_rt
     if hydro_config["enabled"]:
         storages.append(Storage(hydro_config["charge_mw"], hydro_config["volume_mwh"], hydro_rte, name="Hydro"))
 
-    storages.sort(key=lambda s: s.max_charge)
+    storages.sort(key=lambda s: (-s.max_charge, s.max_volume))  # High MW, then depth
 
     return storages
