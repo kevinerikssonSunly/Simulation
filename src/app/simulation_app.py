@@ -47,28 +47,28 @@ def validate_pair(name: str, capacity: int, price: int):
 
 with st.sidebar:
     with st.expander("Input field explanations"):
-        st.markdown("Grid Connection, MW – Maximum power that can be exported to the grid at any given time.")
+        st.markdown("**Grid Connection, MW** – Maximum power that can be exported to the grid at any given time.")
 
-        st.markdown("Wind Capacity, MW – Installed wind generation capacity.")
-        st.markdown("Wind PaP price EUR/MWh – Contract price for wind energy (Power-as-Produced).")
+        st.markdown("**Wind Capacity, MW** – Installed wind generation capacity.")
+        st.markdown("**Wind PaP price, EUR/MWh** – Contract price for wind energy (Power-as-Produced).")
 
-        st.markdown("Solar Capacity, MW – Installed solar (PV) generation capacity.")
-        st.markdown("PV PaP price EUR/MWh – Contract price for solar energy (Power-as-Produced).")
+        st.markdown("**Solar Capacity, MW – Installed solar (PV) generation capacity.")
+        st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
 
-        st.markdown(f"Target Baseload MW – Minimum constant power output target. Cannot exceed grid connection limit.")
+        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target. Cannot exceed grid connection limit.")
 
-        st.markdown("Missing Energy Price EUR/MWh – Penalty or replacement cost for unmet baseload demand.")
+        st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
 
         st.markdown("---")
         st.markdown("### Battery Storage Settings")
 
-        st.markdown("BESS Xh Capacity MW – Charge/discharge power capacity of the battery with X-hour duration.")
-        st.markdown("BESS Xh annual payment, EUR – Annual fixed cost for the corresponding battery system.")
+        st.markdown("**BESS Xh Capacity MW** – Charge/discharge power capacity of the battery with X-hour duration.")
+        st.markdown("**BESS Xh annual payment, EUR** – Annual fixed cost for the corresponding battery system.")
         st.markdown("A 2h BESS with 50 MW can store and release up to 100 MWh total.")
         st.markdown("Input is required for both capacity and cost to include each storage type.")
 
-        st.markdown("Pumped Hydro, MW – Power capacity of pumped hydro storage system.")
-        st.markdown("Pumped Hydro annual payment, EUR – Fixed yearly cost of the hydro storage system.")
+        st.markdown("**Pumped Hydro, MW** – Power capacity of pumped hydro storage system.")
+        st.markdown("**Pumped Hydro annual payment, EUR** – Fixed yearly cost of the hydro storage system.")
 
         st.markdown("All BESS systems use 86% round-trip efficiency and Hydro Pump uses 90%.")
 
