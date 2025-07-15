@@ -46,13 +46,84 @@ def validate_pair(name: str, capacity: int, price: int):
         st.error(f"⚠️ Both capacity and price must be > 0 for {name} if either is filled.")
 
 with st.sidebar:
-    with st.expander("Results field explinations"):
-        st.markdown("BL 1 – Effective cost of delivered baseload (incl. storage + missing energy at VWAP)")
-        st.markdown("BL 2 – Effective cost of delivered baseload using fixed missing energy")
-        st.markdown("Break-even Price 1 – Total baseload cost per MWh using fixed price for missing energy")
-        st.markdown("Break-even Price 2 – Total baseload cost per MWh using VWAP for missing energy")
+    with st.expander("Input field explanations"):
+        st.markdown("Grid Connection, MW – Maximum power that can be exported to the grid at any given time.")
 
+        st.markdown("Wind Capacity, MW – Installed wind generation capacity.")
+        st.markdown("Wind PaP price EUR/MWh – Contract price for wind energy (Power-as-Produced).")
 
+        st.markdown("Solar Capacity, MW – Installed solar (PV) generation capacity.")
+        st.markdown("PV PaP price EUR/MWh – Contract price for solar energy (Power-as-Produced).")
+
+        st.markdown(f"Target Baseload MW – Minimum constant power output target. Cannot exceed grid connection limit.")
+
+        st.markdown("Missing Energy Price EUR/MWh – Penalty or replacement cost for unmet baseload demand.")
+
+        st.markdown("---")
+        st.markdown("### Battery Storage Settings")
+
+        st.markdown("BESS Xh Capacity MW – Charge/discharge power capacity of the battery with X-hour duration.")
+        st.markdown("BESS Xh annual payment, EUR – Annual fixed cost for the corresponding battery system.")
+        st.markdown("A 2h BESS with 50 MW can store and release up to 100 MWh total.")
+        st.markdown("Input is required for both capacity and cost to include each storage type.")
+
+        st.markdown("Pumped Hydro, MW – Power capacity of pumped hydro storage system.")
+        st.markdown("Pumped Hydro annual payment, EUR – Fixed yearly cost of the hydro storage system.")
+
+        st.markdown("All BESS systems use 86% round-trip efficiency and Hydro Pump uses 90%.")
+
+with st.sidebar:
+    with st.expander("Results field explanations"):
+        st.markdown("**Simulation id** – Identifier for the simulation run (can be used to group multiple results).")
+        st.markdown("**Year** – Simulation year this result corresponds to.")
+
+        st.markdown(
+            "**BL 1, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
+        st.markdown(
+            "**BL 2, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
+
+        st.markdown(
+            "**Break-even 1, EUR/MWh** – Required price to break even based on production, storage cost, excess sellback, and missing energy cost (fixed price).")
+        st.markdown("**Break-even 2, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
+
+        st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
+        st.markdown(
+            "**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
+        st.markdown("**Nr of green BL hours, h** – Number of hours when baseload demand was fully met.")
+        st.markdown("**Nr of hours, h** – Total number of hours in the simulated year.")
+
+        st.markdown(
+            "**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
+        st.markdown("**PV cap price, EUR/MWh** – VWAP of solar (PV) energy sent to the grid.")
+        st.markdown(
+            "**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
+        st.markdown(
+            "**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
+
+        st.markdown("**Baseload, MWh** – Total annual energy demand as determined by the baseload level (in MWh).")
+        st.markdown(
+            "**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
+
+        st.markdown(
+            "**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
+        st.markdown(
+            "**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
+
+        st.markdown("**Wind prod, MWh** – Total annual energy produced by wind farms.")
+        st.markdown("**Solar prod, MWh** – Total annual energy produced by solar panels.")
+        st.markdown(
+            "**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
+        st.markdown("**Solar in BL, MWh** – Same as above, but for solar energy.")
+
+        st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
+        st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
+        st.markdown(
+            "**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
+        st.markdown("**Redundant solar, MWh** – Same as above, but for solar.")
+
+        st.markdown(
+            "**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
+        st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
 if simulation_mode == "Manual Input":
     with st.sidebar:
         st.subheader("Manual Input")
