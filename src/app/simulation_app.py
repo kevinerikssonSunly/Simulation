@@ -4,16 +4,14 @@ import sys
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-
-from simulation.simulate_dispatch import simulate_dispatch
-from utils.data_prep import extract_from_file
-
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
+from simulation.simulate_dispatch import simulate_dispatch
+from utils.data_prep import extract_from_file
 from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT, SIMULATION_INPUT
 from utils.profiles import get_profiles
 
