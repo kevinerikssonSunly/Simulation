@@ -96,7 +96,7 @@ def simulate_dispatch(
 
         for i, storage in enumerate(storages[:-1] if hydro_config["enabled"] else storages):
             yearly_cycles = storage.get_average_cycles_per_year()
-            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 25)
+            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
             result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
             storage.reset_yearly_energy()
 

@@ -225,42 +225,47 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-def plot_energy_stack(df, baseload_value):
+def plot_energy_stack(df, baseload_mw):
+
     df_plot = df.copy()
-    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].copy()
+    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
 
-    # Fill missing values
-    for col in df_plot.columns:
-        df_plot[col] = df_plot[col].fillna(0)
+    # Resample hourly data to daily total energy (MWh per day)
+    df_plot_daily = df_plot.resample("D").sum()
 
-    # Add baseload
-    df_plot["baseload"] = baseload_value
+    # Compute cumulative energy over time
+    df_cum = df_plot_daily.cumsum()
 
-    # Resample to daily averages
+    # Create cumulative baseload line: baseline energy needed each day
+    hours_per_day = 24
+    df_cum["baseload"] = baseload_mw * hours_per_day * (df_cum.index.to_series().rank(method='first'))
+
+    # Plotting
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Plot stack
+    # Stackplot: how cumulative baseload is met
     ax.stackplot(
-        df_plot.index,
-        df_plot["produced_energy"],
-        df_plot["battery_discharged"],
-        df_plot["missing_energy"],
+        df_cum.index,
+        df_cum["produced_energy"],
+        df_cum["battery_discharged"],
+        df_cum["missing_energy"],
         labels=["Direct Production", "Battery Discharge", "Missing Energy"],
         alpha=0.8
     )
 
-    # Step line for baseload
-    ax.step(df_plot.index, df_plot["baseload"], where='mid', color="black", linestyle="--", label="Baseload")
+    # Diagonal cumulative baseload line
+    ax.plot(df_cum.index, df_cum["baseload"], color="black", linestyle="--", linewidth=2, label="Cumulative Baseload")
 
-    # Axes formatting
-    ax.set_ylabel("Average Power (MW)")
-    ax.set_title(f"Daily Avg Energy Supply vs Baseload – {df_plot.index[0].year}", fontsize=14)
+    # Axes labels and title
+    ax.set_ylabel("Cumulative Energy (MWh)")
+    ax.set_title(f"Cumulative Energy Supply vs Baseload – {df_cum.index[0].year}", fontsize=14)
 
+    # Time formatting on x-axis
     ax.xaxis.set_major_locator(mdates.MonthLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-    plt.xticks(rotation=0)
+    ax.tick_params(axis='x', rotation=0)
 
-    ax.legend(loc="upper right")
+    ax.legend(loc="upper left")
     ax.grid(True, linestyle="--", alpha=0.4)
 
     return fig
@@ -324,37 +329,46 @@ if run_button_batch:
             st.dataframe(result_df)
 
 elif run_button_manual:
-    wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
+    with st.spinner("Running simulation..."):
 
-    results, yearly_df = simulate_dispatch(
-        profile_file, grid_connection, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
-        wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
-        battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
-        battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,
-        bess_rte=0.86, hydro_rte=0.9
-    )
+        wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
+        results, yearly_df = simulate_dispatch(
+            profile_file, grid_connection, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
+            wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
+            battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
+            battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,
+            bess_rte=0.86, hydro_rte=0.9
+        )
 
-    result_df = pd.DataFrame(results)
-    st.success("✅ Simulation complete!")
+        result_df = pd.DataFrame(results)
+        st.success("✅ Simulation complete!")
 
-    st.subheader("Annual Results")
-    st.dataframe(result_df)
+        st.subheader("Annual Results")
+        st.dataframe(result_df)
 
-    csv_buffer = BytesIO()
-    result_df.to_csv(csv_buffer, index=False)
-    st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
+        # Calculate mean across all years (all rows) for each numeric column
+        mean_df = result_df.mean(numeric_only=True).to_frame().T
 
-    summary_df = summarize_by_price_step(yearly_df)
-    tab_titles = [f"Year {year}" for year in summary_df["year"].unique()]
-    tabs = st.tabs(tab_titles)
+        # Optionally, add a label to make it clear this is the overall mean
+        mean_df = mean_df.drop(columns=["year", "Simulation id"])
+        st.dataframe(mean_df)
 
-    for tab, year in zip(tabs, summary_df["year"].unique()):
-        with tab:
-            st.subheader(f"Charts for Year {year}")
-            year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
-            st.markdown("Missing Energy")
-            st.bar_chart(year_data["missing_energy"])
-            st.markdown("Excess Energy")
-            st.bar_chart(year_data["excess_energy"])
-            yearly_df_year = yearly_df[yearly_df.index.year == year]
-            st.pyplot(plot_energy_stack(yearly_df_year, baseload_value=baseload))
+
+        csv_buffer = BytesIO()
+        result_df.to_csv(csv_buffer, index=False)
+        st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
+
+        summary_df = summarize_by_price_step(yearly_df)
+        tab_titles = [f"Year {year}" for year in summary_df["year"].unique()]
+        tabs = st.tabs(tab_titles)
+
+        for tab, year in zip(tabs, summary_df["year"].unique()):
+            with tab:
+                st.subheader(f"Charts for Year {year}")
+                year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
+                st.markdown("Missing Energy")
+                st.bar_chart(year_data["missing_energy"])
+                st.markdown("Excess Energy")
+                st.bar_chart(year_data["excess_energy"])
+                yearly_df_year = yearly_df[yearly_df.index.year == year]
+                st.pyplot(plot_energy_stack(yearly_df_year, baseload_mw=baseload))
