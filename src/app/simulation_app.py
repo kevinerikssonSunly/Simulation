@@ -225,47 +225,42 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-def plot_energy_stack(df, baseload_mw):
-
+def plot_energy_stack(df, baseload_value):
     df_plot = df.copy()
-    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
+    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].copy()
 
-    # Resample hourly data to daily total energy (MWh per day)
-    df_plot_daily = df_plot.resample("D").sum()
+    # Fill missing values
+    for col in df_plot.columns:
+        df_plot[col] = df_plot[col].fillna(0)
 
-    # Compute cumulative energy over time
-    df_cum = df_plot_daily.cumsum()
+    # Add baseload
+    df_plot["baseload"] = baseload_value
 
-    # Create cumulative baseload line: baseline energy needed each day
-    hours_per_day = 24
-    df_cum["baseload"] = baseload_mw * hours_per_day * (df_cum.index.to_series().rank(method='first'))
-
-    # Plotting
+    # Resample to daily averages
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Stackplot: how cumulative baseload is met
+    # Plot stack
     ax.stackplot(
-        df_cum.index,
-        df_cum["produced_energy"],
-        df_cum["battery_discharged"],
-        df_cum["missing_energy"],
+        df_plot.index,
+        df_plot["produced_energy"],
+        df_plot["battery_discharged"],
+        df_plot["missing_energy"],
         labels=["Direct Production", "Battery Discharge", "Missing Energy"],
         alpha=0.8
     )
 
-    # Diagonal cumulative baseload line
-    ax.plot(df_cum.index, df_cum["baseload"], color="black", linestyle="--", linewidth=2, label="Cumulative Baseload")
+    # Step line for baseload
+    ax.step(df_plot.index, df_plot["baseload"], where='mid', color="black", linestyle="--", label="Baseload")
 
-    # Axes labels and title
-    ax.set_ylabel("Cumulative Energy (MWh)")
-    ax.set_title(f"Cumulative Energy Supply vs Baseload – {df_cum.index[0].year}", fontsize=14)
+    # Axes formatting
+    ax.set_ylabel("Average Power (MW)")
+    ax.set_title(f"Daily Avg Energy Supply vs Baseload – {df_plot.index[0].year}", fontsize=14)
 
-    # Time formatting on x-axis
     ax.xaxis.set_major_locator(mdates.MonthLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-    ax.tick_params(axis='x', rotation=0)
+    plt.xticks(rotation=0)
 
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.4)
 
     return fig
@@ -371,4 +366,4 @@ elif run_button_manual:
                 st.markdown("Excess Energy")
                 st.bar_chart(year_data["excess_energy"])
                 yearly_df_year = yearly_df[yearly_df.index.year == year]
-                st.pyplot(plot_energy_stack(yearly_df_year, baseload_mw=baseload))
+                st.pyplot(plot_energy_stack(yearly_df_year, baseload_value=baseload))
