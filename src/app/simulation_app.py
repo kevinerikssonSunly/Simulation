@@ -47,7 +47,6 @@ def validate_pair(name: str, capacity: int, price: int):
 
 with st.sidebar:
     with st.expander("Input field explanations"):
-        st.markdown("**Grid Connection, MW** – Maximum power that can be exported to the grid at any given time.")
 
         st.markdown("**Wind Capacity, MW** – Installed wind generation capacity.")
         st.markdown("**Wind PaP price, EUR/MWh** – Contract price for wind energy (Power-as-Produced).")
@@ -55,7 +54,7 @@ with st.sidebar:
         st.markdown("**Solar Capacity, MW – Installed solar (PV) generation capacity.")
         st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
 
-        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target. Cannot exceed grid connection limit.")
+        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
 
         st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
 
@@ -128,7 +127,6 @@ if simulation_mode == "Manual Input":
     with st.sidebar:
         st.subheader("Manual Input")
 
-        grid_connection = st.number_input("Grid Connection, MW", min_value=1)
         col1, col2 = st.columns(2)
         with col1:
             wind_cap = st.number_input("Wind Capacity, MW", min_value=0, value=0)
@@ -143,7 +141,7 @@ if simulation_mode == "Manual Input":
 
         col5, col6 = st.columns(2)
         with col5:
-            baseload = st.number_input(f"Target Baseload MW, Min 1 - Max {grid_connection} MW", min_value=1, max_value=grid_connection, value=1)
+            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
         with col6:
             missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
 
@@ -273,7 +271,6 @@ if run_button_batch:
             k = 1
 
             for i, row in input_rows.iterrows():
-                grid_connection = row["grid_connection"]
                 wind_cap = row["wind_cap"]
                 solar_cap = row["solar_cap"]
                 baseload = row["baseload"]
@@ -298,7 +295,7 @@ if run_button_batch:
                 wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
 
                 results, _ = simulate_dispatch(
-                    profile_file, grid_connection, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
+                    profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
                     wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
                     battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
                     battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,
@@ -328,7 +325,7 @@ elif run_button_manual:
 
         wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
         results, yearly_df = simulate_dispatch(
-            profile_file, grid_connection, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
+            profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
             wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
             battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
             battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,

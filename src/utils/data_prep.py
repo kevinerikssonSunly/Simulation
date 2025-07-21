@@ -46,3 +46,6 @@ def extract_from_file(file) -> pd.DataFrame:
     df.dropna(how='all', inplace=True)
     return df
 
+
+
+

@@ -25,7 +25,6 @@ def run_all_scenarios(
 
     results, hourly_df = simulate_dispatch(
         profile_file=profiles,
-        grid_connection = 183,
         wind_prod = wind_prod,
         solar_prod = solar_prod,
         baseload = baseload,

@@ -8,7 +8,6 @@ from utils.calculations import vwap_energy, share_allocation
 
 
 def simulate_year_dispatch(metrics: Dict[str, Any],
-                           grid_connection: int,
                            year: int,
                            wind_year: pd.Series,
                            solar_year: pd.Series,
@@ -31,9 +30,9 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
         wind = round(wind_year.iloc[hour], 3)
         solar = round(solar_year.iloc[hour], 3)
         timestamp = wind_year.index[hour]
-        spot = spot_prices.loc[timestamp, "Spot"]
+        spot = spot_prices.loc[timestamp, "spot"]
 
-        result, cycle_loss = simulate_hour(grid_connection, wind, solar, storages, baseload, timestamp, metrics)
+        result, cycle_loss = simulate_hour(wind, solar, storages, baseload, timestamp, metrics)
         result["timestamp"] = timestamp
         result["Spot"] = spot
 
@@ -42,7 +41,7 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
 
 
     metrics["cycle_loss_total"] = cycle_loss_total
-    metrics["missing_energy"] -= cycle_loss_total
+    metrics["missing_energy"] = max(0, metrics["missing_energy"] - cycle_loss_total)
 
     hourly_df = pd.DataFrame(hourly_records).set_index("timestamp")
     vwap_missing = vwap_energy(hourly_df, "missing_energy", "Spot")
@@ -64,7 +63,6 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
     )
 
 def simulate_hour(
-        grid_connection: int,
         wind: float,
         solar: float,
         storages: List[StorageUnit],
@@ -76,7 +74,6 @@ def simulate_hour(
     total_gen = wind + solar
     missing_energy = excess_energy = 0.0
     cycle_loss_total = 0.0
-    grid_cap = grid_connection
     discharged_total = 0.0
 
     if total_gen >= baseload:
@@ -101,10 +98,7 @@ def simulate_hour(
         bess_remaining_solar = solar_surplus
         remaining_surplus = bess_remaining_wind + bess_remaining_solar
 
-        available_grid_surplus = max(grid_cap - baseload, 0.0)
-        to_grid_total = min(remaining_surplus, available_grid_surplus)
-
-        to_grid_wind, to_grid_solar = share_allocation(bess_remaining_wind, bess_remaining_solar, to_grid_total)
+        to_grid_wind, to_grid_solar = share_allocation(bess_remaining_wind, bess_remaining_solar, remaining_surplus)
         metrics["excess_wind"] += to_grid_wind
         metrics["excess_solar"] += to_grid_solar
 
@@ -116,8 +110,8 @@ def simulate_hour(
         metrics["charged_wind"] += initial_wind_surplus - bess_remaining_wind
         metrics["charged_solar"] += initial_solar_surplus - bess_remaining_solar
 
-        metrics["excess_energy"] += to_grid_total
-        excess_energy = to_grid_total
+        metrics["excess_energy"] += remaining_surplus
+        excess_energy = remaining_surplus
 
     else:
         shortfall = baseload - total_gen

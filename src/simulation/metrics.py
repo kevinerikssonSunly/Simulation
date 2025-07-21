@@ -59,6 +59,7 @@ def compile_result(
         "BL 2, EUR/MWh": "",
         "Break-even 1, EUR/MWh": "",
         "Break-even 2, EUR/MWh": "",
+        "Overproduction share, %": "",
         "Annual avg spot, EUR/MWh": "",
         "Res share in BL, %": round((m["produced_total"] / expected_baseload) * 100, 2) if expected_baseload > 0 and pd.notna(
             m["produced_total"]) else 0.0,
@@ -69,7 +70,6 @@ def compile_result(
         "Missing energy VWAP, EUR/MWh": round(vwap_missing, 2),
         "Excess energy VWAP, EUR/MWh": round(vwap_excess, 2),
         "Baseload, MWh": expected_baseload,
-        "Overproduction share, %": "",
         "Missing energy, MWh": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
         "Cycle loss, MWh": round(m["cycle_loss_total"], 2),
         "Wind prod, MWh": round(wind_total),

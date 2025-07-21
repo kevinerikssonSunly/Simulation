@@ -11,7 +11,6 @@ from utils.calculations import calculate_break_even_price_1, calculate_break_eve
 
 def simulate_dispatch(
     profile_file,
-    grid_connection,
     wind_prod,
     solar_prod,
     baseload: float,
@@ -64,7 +63,7 @@ def simulate_dispatch(
 
         metrics = init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price)
 
-        result, hourly_df = simulate_year_dispatch(metrics, grid_connection, year, wind_prod_year, solar_prod_year, df,
+        result, hourly_df = simulate_year_dispatch(metrics, year, wind_prod_year, solar_prod_year, df,
                                                        storages, baseload, wind_cap, solar_cap, battery_config, hydro_config)
 
         total_storage_cost = sum([
