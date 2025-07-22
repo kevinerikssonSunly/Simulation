@@ -9,7 +9,7 @@ if __name__ == "__main__":
     df_profiles = pd.read_excel(path)
     wind_profile = df_profiles['wind_profile']
     solar_profile = df_profiles['solar_profile']
-    run_all_scenarios(PROFILES_EE, wind_profile, solar_profile, 40)
+    run_all_scenarios(PROFILES_EE, wind_profile, solar_profile, 10)
 
 '''
     baseload = 40#input("Enter baseload (MW): ")

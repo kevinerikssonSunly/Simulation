@@ -145,6 +145,8 @@ if simulation_mode == "Manual Input":
         with col6:
             missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
 
+        excess_energy_price = st.number_input("Excess Energy Price EUR/MWh", min_value=0, value=0)
+
         with st.expander("Battery Storage Settings"):
             col1, col2 = st.columns(2)
             with col1:
@@ -295,11 +297,31 @@ if run_button_batch:
                 wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
 
                 results, _ = simulate_dispatch(
-                    profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
-                    wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
-                    battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
-                    battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,
-                    bess_rte=bess_rte, hydro_rte=hydro_rte, simulation_id=k
+                    profile_file=profile_file,
+                    wind_prod=wind_prod,
+                    solar_prod=solar_prod,
+                    baseload=baseload,
+                    wind_cap=wind_cap,
+                    solar_cap=solar_cap,
+                    wind_price=wind_price,
+                    solar_price=solar_price,
+                    battery_1h_price=battery_1h_price,
+                    battery_2h_price=battery_2h_price,
+                    battery_4h_price=battery_4h_price,
+                    battery_6h_price=battery_6h_price,
+                    battery_8h_price=battery_8h_price,
+                    hydro_storage_price=hydro_storage_price,
+                    missing_energy_price=missing_energy_price,
+                    excess_energy_price=excess_energy_price,
+                    battery_1h_mw=battery_1h,
+                    battery_2h_mw=battery_2h,
+                    battery_4h_mw=battery_4h,
+                    battery_6h_mw=battery_6h,
+                    battery_8h_mw=battery_8h,
+                    hydro_mw=hydro_storage,
+                    bess_rte=0.86,
+                    hydro_rte=0.9,
+                    simulation_id=k
                 )
                 k += 1
                 all_results.extend(results)
@@ -325,11 +347,30 @@ elif run_button_manual:
 
         wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
         results, yearly_df = simulate_dispatch(
-            profile_file, wind_prod, solar_prod, baseload, wind_cap, solar_cap,
-            wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price,
-            battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price,
-            battery_1h, battery_2h, battery_4h, battery_6h, battery_8h, hydro_storage,
-            bess_rte=0.86, hydro_rte=0.9
+            profile_file=profile_file,
+            wind_prod=wind_prod,
+            solar_prod=solar_prod,
+            baseload=baseload,
+            wind_cap=wind_cap,
+            solar_cap=solar_cap,
+            wind_price=wind_price,
+            solar_price=solar_price,
+            battery_1h_price=battery_1h_price,
+            battery_2h_price=battery_2h_price,
+            battery_4h_price=battery_4h_price,
+            battery_6h_price=battery_6h_price,
+            battery_8h_price=battery_8h_price,
+            hydro_storage_price=hydro_storage_price,
+            missing_energy_price=missing_energy_price,
+            excess_energy_price=excess_energy_price,
+            battery_1h_mw=battery_1h,
+            battery_2h_mw=battery_2h,
+            battery_4h_mw=battery_4h,
+            battery_6h_mw=battery_6h,
+            battery_8h_mw=battery_8h,
+            hydro_mw=hydro_storage,
+            bess_rte=0.86,
+            hydro_rte=0.9
         )
 
         result_df = pd.DataFrame(results)
