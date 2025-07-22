@@ -4,6 +4,10 @@ import sys
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
@@ -139,13 +143,17 @@ if simulation_mode == "Manual Input":
         with col4:
             solar_price = st.number_input("PV PaP price EUR/MWh", min_value=0, value=0)
 
+        col7, col8 = st.columns(2)
+        with col7:
+            wind_excess_energy_price = st.number_input("Wind excess energy price EUR/MWh", min_value=0, value=0)
+        with col8:
+            solar_excess_energy_price = st.number_input("PV excess energy price EUR/MWh", min_value=0, value=0)
+
         col5, col6 = st.columns(2)
         with col5:
             baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
         with col6:
             missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
-
-        excess_energy_price = st.number_input("Excess Energy Price EUR/MWh", min_value=0, value=0)
 
         with st.expander("Battery Storage Settings"):
             col1, col2 = st.columns(2)
@@ -222,37 +230,38 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
     )
     return summary
 
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
 def plot_energy_stack(df, baseload_value):
     df_plot = df.copy()
-    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].copy()
-
-    # Fill missing values
-    for col in df_plot.columns:
-        df_plot[col] = df_plot[col].fillna(0)
-
-    # Add baseload
+    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
     df_plot["baseload"] = baseload_value
 
-    # Resample to daily averages
+    # Compute contribution of battery that actually helps meet baseload
+    df_plot["battery_to_bl"] = np.minimum(
+        np.maximum(df_plot["baseload"] - df_plot["produced_energy"], 0),
+        df_plot["battery_discharged"]
+    )
+
+    # Compute unmet energy after production + battery
+    df_plot["missing_to_bl"] = np.maximum(
+        df_plot["baseload"] - df_plot["produced_energy"] - df_plot["battery_to_bl"], 0
+    )
+
+    # Plot
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Plot stack
     ax.stackplot(
         df_plot.index,
-        df_plot["produced_energy"],
-        df_plot["battery_discharged"],
-        df_plot["missing_energy"],
+        df_plot["battery_to_bl"],
+        df_plot["missing_to_bl"],
         labels=["Direct Production", "Battery Discharge", "Missing Energy"],
-        alpha=0.8
+        colors=["#1f77b4", "orange", "green"],
+        linewidth=2,
+        alpha=0.9
     )
 
     # Step line for baseload
     ax.step(df_plot.index, df_plot["baseload"], where='mid', color="black", linestyle="--", label="Baseload")
 
-    # Axes formatting
     ax.set_ylabel("Average Power (MW)")
     ax.set_title(f"Daily Avg Energy Supply vs Baseload – {df_plot.index[0].year}", fontsize=14)
 
@@ -312,7 +321,8 @@ if run_button_batch:
                     battery_8h_price=battery_8h_price,
                     hydro_storage_price=hydro_storage_price,
                     missing_energy_price=missing_energy_price,
-                    excess_energy_price=excess_energy_price,
+                    wind_excess_energy_price=wind_excess_energy_price,
+                    solar_excess_energy_price=solar_excess_energy_price,
                     battery_1h_mw=battery_1h,
                     battery_2h_mw=battery_2h,
                     battery_4h_mw=battery_4h,
@@ -362,7 +372,8 @@ elif run_button_manual:
             battery_8h_price=battery_8h_price,
             hydro_storage_price=hydro_storage_price,
             missing_energy_price=missing_energy_price,
-            excess_energy_price=excess_energy_price,
+            wind_excess_energy_price=wind_excess_energy_price,
+            solar_excess_energy_price=solar_excess_energy_price,
             battery_1h_mw=battery_1h,
             battery_2h_mw=battery_2h,
             battery_4h_mw=battery_4h,
