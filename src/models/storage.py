@@ -11,7 +11,7 @@ class Storage(StorageUnit):
         self.soc = 0
         self.total_charged_wind = 0
         self.total_charged_solar = 0
-        self.discharge_limit_per_day = 2 * storage_volume_MWh
+        self.discharge_limit_per_day = 2*storage_volume_MWh
         self.daily_discharged_energy = 0
         self.yearly_discharged_energy = 0
         self.last_updated_day = None

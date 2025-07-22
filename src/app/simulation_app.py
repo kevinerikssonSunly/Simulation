@@ -51,7 +51,7 @@ with st.sidebar:
         st.markdown("**Wind Capacity, MW** – Installed wind generation capacity.")
         st.markdown("**Wind PaP price, EUR/MWh** – Contract price for wind energy (Power-as-Produced).")
 
-        st.markdown("**Solar Capacity, MW – Installed solar (PV) generation capacity.")
+        st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
         st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
 
         st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
