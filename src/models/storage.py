@@ -1,5 +1,3 @@
-import pandas as pd
-
 from interfaces.StorageUnit import StorageUnit
 
 
@@ -14,6 +12,7 @@ class Storage(StorageUnit):
         self.discharge_limit_per_day = 2*storage_volume_MWh
         self.daily_discharged_energy = 0
         self.yearly_discharged_energy = 0
+        self.zero_hours = 0
         self.last_updated_day = None
         self.name = name
 
@@ -64,6 +63,8 @@ class Storage(StorageUnit):
         delivered = discharged * self.discharge_eff
         cycle_loss = discharged - delivered
 
+        if delivered == 0: self.zero_hours += 1
+
         return delivered, cycle_loss
 
     def get_average_cycles_per_year(self):
@@ -71,3 +72,10 @@ class Storage(StorageUnit):
 
     def reset_yearly_energy(self):
         self.yearly_discharged_energy = 0.0
+
+    def get_zero_hours(self):
+        return self.zero_hours
+
+    def reset_yearly_zero_hours(self):
+        self.zero_hours = 0.0
+

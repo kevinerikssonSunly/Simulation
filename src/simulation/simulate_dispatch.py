@@ -86,8 +86,8 @@ def simulate_dispatch(
         brake_even_2 = calculate_break_even_price_2(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, result["Excess wind, MWh"], wind_excess_energy_price, result["Excess solar, MWh"], solar_excess_energy_price, result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year))
         result["BL 1, EUR/MWh"] = round(bl_price_1, 2)
         result["BL 2, EUR/MWh"] = round(bl_price_2, 2)
-        result["Break-even 1, EUR/MWh"] = round(brake_even_1, 2)
-        result["Break-even 2, EUR/MWh"] = round(brake_even_2, 2)
+        result["Break-even - Fixed Missing, EUR/MWh"] = round(brake_even_1, 2)
+        result["Break-even - VWAP Missing, EUR/MWh"] = round(brake_even_2, 2)
         result["Annual avg spot, EUR/MWh"] = hourly_df["Spot"].mean()
         result["Overproduction share, %"] = calculate_overproduction_share(excess_energy, redundant_energy, wind_prod_year.sum(), solar_prod_year.sum())
         result["Simulation id"] = simulation_id
@@ -99,7 +99,9 @@ def simulate_dispatch(
             yearly_cycles = storage.get_average_cycles_per_year()
             avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
             result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
+            result[f"{storage.name} zero hours"] = round(storage.get_zero_hours() / len(wind_prod_year) * 100, 2)
             storage.reset_yearly_energy()
+            storage.reset_yearly_zero_hours()
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 

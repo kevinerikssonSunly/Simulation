@@ -23,3 +23,13 @@ class StorageUnit(ABC):
     def reset_yearly_energy(self) -> float:
         """Resets yearly energy"""
         pass
+
+    @abstractmethod
+    def get_zero_hours(self) -> float:
+        """Resets yearly energy"""
+        pass
+
+    @abstractmethod
+    def reset_yearly_zero_hours(self) -> float:
+        """Resets yearly energy"""
+        pass

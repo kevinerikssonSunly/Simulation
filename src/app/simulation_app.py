@@ -5,8 +5,7 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import altair as alt
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
@@ -230,7 +229,7 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
     )
     return summary
 
-def plot_energy_stack(df, baseload_value):
+def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
     df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
     df_plot["baseload"] = baseload_value
@@ -246,33 +245,29 @@ def plot_energy_stack(df, baseload_value):
         df_plot["baseload"] - df_plot["produced_energy"] - df_plot["battery_to_bl"], 0
     )
 
-    # Plot
-    fig, ax = plt.subplots(figsize=(14, 6))
+    df_plot = df_plot[["produced_energy", "battery_to_bl", "missing_to_bl"]].copy()
+    df_plot.columns = ["Battery Discharge", "Direct Production", "Missing Energy"]
+    df_plot["Date"] = df_plot.index
 
-    ax.stackplot(
-        df_plot.index,
-        df_plot["battery_to_bl"],
-        df_plot["missing_to_bl"],
-        labels=["Direct Production", "Battery Discharge", "Missing Energy"],
-        colors=["#1f77b4", "orange", "green"],
-        linewidth=2,
-        alpha=0.9
-    )
+    # Convert to long-form
+    df_melt = df_plot.melt(id_vars="Date", var_name="Source", value_name="Value")
 
-    # Step line for baseload
-    ax.step(df_plot.index, df_plot["baseload"], where='mid', color="black", linestyle="--", label="Baseload")
+    category_order = ["Battery Discharge", "Direct Production", "Missing Energy"]
 
-    ax.set_ylabel("Average Power (MW)")
-    ax.set_title(f"Daily Avg Energy Supply vs Baseload – {df_plot.index[0].year}", fontsize=14)
+    chart = alt.Chart(df_melt).mark_bar(size=1).encode(
+        x=alt.X("Date:T", title="Date"),
+        y=alt.Y("Value:Q", stack="zero", title="Average Power (MW)"),
+        color=alt.Color("Source:N", scale=alt.Scale(scheme="category10"), sort=category_order),
+        order=alt.Order("Source:N", sort="ascending"),
+        tooltip=["Date:T", "Source:N", "Value:Q"]
+    ).properties(
+        width=400,
+        height=400,
+        title="Daily Average Energy Supply vs Baseload"
+    ).interactive()
 
-    ax.xaxis.set_major_locator(mdates.MonthLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-    plt.xticks(rotation=0)
+    return chart
 
-    ax.legend(loc="upper right")
-    ax.grid(True, linestyle="--", alpha=0.4)
-
-    return fig
 if run_button_batch:
     with st.spinner("Running simulation..."):
         if uploaded_file:
@@ -387,20 +382,30 @@ elif run_button_manual:
         result_df = pd.DataFrame(results)
         st.success("✅ Simulation complete!")
 
-        st.subheader("Annual Results")
-        st.dataframe(result_df)
+        # Extract and pivot key KPIs
+        kpi_df = result_df[[
+            "year",
+            "Break-even - Fixed Missing, EUR/MWh",
+            "Break-even - VWAP Missing, EUR/MWh",
+            "Res share in BL, %",
+            "Overproduction share, %"
+        ]].copy()
 
-        # Calculate mean across all years (all rows) for each numeric column
-        mean_df = result_df.mean(numeric_only=True).to_frame().T
+        # Set year as index so it appears as the Y-axis
+        kpi_df.set_index("year", inplace=True)
 
-        # Optionally, add a label to make it clear this is the overall mean
-        mean_df = mean_df.drop(columns=["year", "Simulation id"])
-        st.dataframe(mean_df)
+        # Compute average row (rounded before assigning)
+        average_row = kpi_df.mean()
+        kpi_df.loc["Average"] = average_row
 
+        st.subheader("Key Results")
+        st.dataframe(kpi_df)
 
-        csv_buffer = BytesIO()
-        result_df.to_csv(csv_buffer, index=False)
-        st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
+        with st.expander("All Results"):
+            st.dataframe(result_df)
+            csv_buffer = BytesIO()
+            result_df.to_csv(csv_buffer, index=False)
+            st.download_button("📥 Download Results as CSV", data=csv_buffer.getvalue(), file_name="simulation_results.csv")
 
         summary_df = summarize_by_price_step(yearly_df)
         tab_titles = [f"Year {year}" for year in summary_df["year"].unique()]
@@ -415,4 +420,7 @@ elif run_button_manual:
                 st.markdown("Excess Energy")
                 st.bar_chart(year_data["excess_energy"])
                 yearly_df_year = yearly_df[yearly_df.index.year == year]
-                st.pyplot(plot_energy_stack(yearly_df_year, baseload_value=baseload))
+
+                # Plot filtered
+                st.altair_chart(plot_energy_stack_st_altair(yearly_df_year, baseload_value=baseload),
+                                use_container_width=True)
