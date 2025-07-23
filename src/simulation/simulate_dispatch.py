@@ -95,13 +95,22 @@ def simulate_dispatch(
         results_by_year.append(result)
         all_hourly_dfs.append(hourly_df)
 
-        for i, storage in enumerate(storages[:-1] if hydro_config["enabled"] else storages):
-            yearly_cycles = storage.get_average_cycles_per_year()
-            avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
-            result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
-            result[f"{storage.name} zero hours"] = round(storage.get_zero_hours() / len(wind_prod_year) * 100, 2)
-            storage.reset_yearly_energy()
-            storage.reset_yearly_zero_hours()
+        used_storage_names = [s.name for s in storages]
+
+        # Iterate over all possible storage names (even if not active)
+        for storage_name in ["BESS 1h", "BESS 2h", "BESS 4h", "BESS 6h", "BESS 8h", "Hydro"]:
+            if storage_name in used_storage_names:
+                storage = next(s for s in storages if s.name == storage_name)
+                yearly_cycles = storage.get_average_cycles_per_year()
+                avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
+                result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
+                result[f"{storage.name} zero hours ratio, %"] = round(storage.get_zero_hours() / len(wind_prod_year) * 100, 2)
+                storage.reset_yearly_energy()
+                storage.reset_yearly_zero_hours()
+            else:
+                # Explicitly add zeros if storage was not used
+                result[f"{storage_name} avg cycles"] = 0.0
+                result[f"{storage_name} zero hours ratio, %"] = 0.0
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 

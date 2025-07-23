@@ -47,164 +47,6 @@ container = st.container()
 def validate_pair(name: str, capacity: int, price: int):
     if (capacity > 0 and price == 0) or (price > 0 and capacity == 0):
         st.error(f"⚠️ Both capacity and price must be > 0 for {name} if either is filled.")
-
-with st.sidebar:
-    with st.expander("Input field explanations"):
-
-        st.markdown("**Wind Capacity, MW** – Installed wind generation capacity.")
-        st.markdown("**Wind PaP price, EUR/MWh** – Contract price for wind energy (Power-as-Produced).")
-
-        st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
-        st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
-
-        st.markdown("**Wind excess energy price EUR/MWh** – Revenue from each MWh of excess energy sold from wind.")
-        st.markdown("**PV excess energy price EUR/MWh** – Revenue from each MWh excess energy sold from solar.")
-
-        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
-
-        st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
-
-        st.markdown("---")
-        st.markdown("### Battery Storage Settings")
-
-        st.markdown("**BESS Xh Capacity MW** – Charge/discharge power capacity of the battery with X-hour duration.")
-        st.markdown("**BESS Xh annual payment, EUR** – Annual fixed cost for the corresponding battery system.")
-        st.markdown("A 2h BESS with 50 MW can store and release up to 100 MWh total.")
-        st.markdown("Input is required for both capacity and cost to include each storage type.")
-
-        st.markdown("**Pumped Hydro, MW** – Power capacity of pumped hydro storage system.")
-        st.markdown("**Pumped Hydro annual payment, EUR** – Fixed yearly cost of the hydro storage system.")
-
-        st.markdown("All BESS systems use 86% round-trip efficiency and Hydro Pump uses 90%.")
-
-with st.sidebar:
-    with st.expander("Results field explanations"):
-        st.markdown("**Simulation id** – Identifier for the simulation run (can be used to group multiple results).")
-        st.markdown("**Year** – Simulation year this result corresponds to.")
-
-        st.markdown(
-            "**BL 1 - Fixed Missing, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
-        st.markdown(
-            "**BL 2 - VWAP Missing, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
-
-        st.markdown("**Break-even 1 - Fixed Missing, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback, and missing energy cost (fixed price).")
-        st.markdown("**Break-even 2 - VWAP Missing, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
-
-        st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
-        st.markdown("**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
-        st.markdown("**Nr of green BL hours, h** – Number of hours when baseload demand was fully met.")
-        st.markdown("**Nr of hours, h** – Total number of hours in the simulated year.")
-
-        st.markdown("**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
-        st.markdown("**PV cap price, EUR/MWh** – VWAP of solar (PV) energy sent to the grid.")
-        st.markdown("**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
-        st.markdown("**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
-
-        st.markdown("**Baseload, MWh** – Total annual energy demand as determined by the baseload level (in MWh).")
-        st.markdown("**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
-
-        st.markdown("**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
-        st.markdown("**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
-
-        st.markdown("**Wind prod, MWh** – Total annual energy produced by wind farms.")
-        st.markdown("**Solar prod, MWh** – Total annual energy produced by solar panels.")
-        st.markdown("**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
-        st.markdown("**Solar in BL, MWh** – Same as above, but for solar energy.")
-
-        st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
-        st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
-        st.markdown("**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
-        st.markdown("**Redundant solar, MWh** – Same as above, but for solar.")
-
-        st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
-        st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
-if simulation_mode == "Manual Input":
-    with st.sidebar:
-        st.subheader("Manual Input")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            wind_cap = st.number_input("Wind Capacity, MW", min_value=0, value=0)
-        with col2:
-            wind_price = st.number_input("Wind PaP price EUR/MWh", min_value=0, value=0)
-
-        col3, col4 = st.columns(2)
-        with col3:
-            solar_cap = st.number_input("Solar Capacity, MW", min_value=0, value=0)
-        with col4:
-            solar_price = st.number_input("PV PaP price EUR/MWh", min_value=0, value=0)
-
-        col7, col8 = st.columns(2)
-        with col7:
-            wind_excess_energy_price = st.number_input("Wind excess energy price EUR/MWh", min_value=0, value=0)
-        with col8:
-            solar_excess_energy_price = st.number_input("PV excess energy price EUR/MWh", min_value=0, value=0)
-
-        col5, col6 = st.columns(2)
-        with col5:
-            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
-        with col6:
-            missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
-
-        with st.expander("Battery Storage Settings"):
-            col1, col2 = st.columns(2)
-            with col1:
-                battery_1h = st.number_input("1h Battery Capacity MW", min_value=0, value=0)
-            with col2:
-                battery_1h_price = st.number_input("BESS 1h annual payment, EUR", min_value=0, value=0)
-            validate_pair("BESS 1h", battery_1h, battery_1h_price)
-
-            col3, col4 = st.columns(2)
-            with col3:
-                battery_2h = st.number_input("2h Battery Capacity, MW", min_value=0, value=0)
-            with col4:
-                battery_2h_price = st.number_input("BESS 2h annual payment, EUR", min_value=0, value=0)
-            validate_pair("BESS 2h", battery_2h, battery_2h_price)
-
-            col5, col6 = st.columns(2)
-            with col5:
-                battery_4h = st.number_input("4h Battery Capacity, MW", min_value=0, value=0)
-            with col6:
-                battery_4h_price = st.number_input("BESS 4h annual payment, EUR", min_value=0, value=0)
-            validate_pair("BESS 4h", battery_4h, battery_4h_price)
-
-            col7, col8 = st.columns(2)
-            with col7:
-                battery_6h = st.number_input("6h Battery Capacity, MW", min_value=0, value=0)
-            with col8:
-                battery_6h_price = st.number_input("BESS 6h annual payment, EUR", min_value=0, value=0)
-            validate_pair("BESS 6h", battery_6h, battery_6h_price)
-
-            col9, col10 = st.columns(2)
-            with col9:
-                battery_8h = st.number_input("8h Battery Capacity, MW", min_value=0, value=0)
-            with col10:
-                battery_8h_price = st.number_input("BESS 8h annual payment, EUR", min_value=0, value=0)
-            validate_pair("BESS 8h", battery_8h, battery_8h_price)
-
-            col11, col12 = st.columns(2)
-            with col11:
-                hydro_storage = st.number_input("Hydro Storage, MW", min_value=0, value=0)
-            with col12:
-                hydro_storage_price = st.number_input("Pumped Hydro annual payment, EUR", min_value=0, value=0)
-            validate_pair("Pumped Hydro", hydro_storage, hydro_storage_price)
-
-        run_button_manual = st.button("Run Simulation")
-
-elif simulation_mode == "Upload File (Batch Mode)":
-    with st.sidebar:
-        with open(SIMULATION_INPUT, "rb") as f:
-            st.download_button(
-                label="📥 Download Simulation Input Template",
-                file_name="simulation_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                data=f.read()
-            )
-
-        st.subheader("Upload File (Batch Mode)")
-        uploaded_file = st.file_uploader("Choose a file to upload")
-        run_button_batch = st.button("Run Simulation")
-
 def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int = 5) -> pd.DataFrame:
     df = df.copy()
     if not isinstance(df.index, pd.DatetimeIndex):
@@ -220,7 +62,6 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
         .sort_values(["year", "price_bin"])
     )
     return summary
-
 def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
     df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
@@ -275,6 +116,162 @@ def plot_energy_stack_st_altair(df, baseload_value):
 
     return chart
 
+with st.sidebar:
+    with st.expander("Input field explanations"):
+
+        st.markdown("**Wind Capacity, MW** – Installed wind generation capacity.")
+        st.markdown("**Wind PaP price, EUR/MWh** – Contract price for wind energy (Power-as-Produced).")
+
+        st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
+        st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
+
+        st.markdown("**Wind excess energy price EUR/MWh** – Revenue from each MWh of excess energy sold from wind.")
+        st.markdown("**PV excess energy price EUR/MWh** – Revenue from each MWh excess energy sold from solar.")
+
+        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
+
+        st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
+
+        st.markdown("---")
+        st.markdown("### Battery Storage Settings")
+
+        st.markdown("**BESS Xh Capacity MW** – Charge/discharge power capacity of the battery with X-hour duration.")
+        st.markdown("**BESS Xh annual payment, EUR** – Annual fixed cost for the corresponding battery system.")
+        st.markdown("A 2h BESS with 50 MW can store and release up to 100 MWh total.")
+        st.markdown("Input is required for both capacity and cost to include each storage type.")
+
+        st.markdown("**Pumped Hydro, MW** – Power capacity of pumped hydro storage system.")
+        st.markdown("**Pumped Hydro annual payment, EUR** – Fixed yearly cost of the hydro storage system.")
+
+        st.markdown("All BESS systems use 86% round-trip efficiency and Hydro Pump uses 90%.")
+with st.sidebar:
+    with st.expander("Results field explanations"):
+        st.markdown("**Simulation id** – Identifier for the simulation run (can be used to group multiple results).")
+        st.markdown("**Year** – Simulation year this result corresponds to.")
+
+        st.markdown(
+            "**BL 1 - Fixed Missing, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
+        st.markdown(
+            "**BL 2 - VWAP Missing, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
+
+        st.markdown("**Break-even 1 - Fixed Missing, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback, and missing energy cost (fixed price).")
+        st.markdown("**Break-even 2 - VWAP Missing, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
+
+        st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
+        st.markdown("**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
+        st.markdown("**Nr of green BL hours, h** – Number of hours when baseload demand was fully met.")
+        st.markdown("**Nr of hours, h** – Total number of hours in the simulated year.")
+
+        st.markdown("**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
+        st.markdown("**PV cap price, EUR/MWh** – VWAP of solar (PV) energy sent to the grid.")
+        st.markdown("**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
+        st.markdown("**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
+
+        st.markdown("**Baseload, MWh** – Total annual energy demand as determined by the baseload level (in MWh).")
+        st.markdown("**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
+
+        st.markdown("**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
+        st.markdown("**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
+
+        st.markdown("**Wind prod, MWh** – Total annual energy produced by wind farms.")
+        st.markdown("**Solar prod, MWh** – Total annual energy produced by solar panels.")
+        st.markdown("**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
+        st.markdown("**Solar in BL, MWh** – Same as above, but for solar energy.")
+
+        st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
+        st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
+        st.markdown("**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
+        st.markdown("**Redundant solar, MWh** – Same as above, but for solar.")
+
+        st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
+        st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
+
+if simulation_mode == "Manual Input":
+    with st.sidebar:
+        st.subheader("Manual Input")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            wind_cap = st.number_input("Wind Capacity, MW", min_value=0, value=0)
+        with col2:
+            wind_price = st.number_input("Wind PaP price EUR/MWh", min_value=0, value=0)
+
+        col3, col4 = st.columns(2)
+        with col3:
+            solar_cap = st.number_input("Solar Capacity, MW", min_value=0, value=0)
+        with col4:
+            solar_price = st.number_input("PV PaP price EUR/MWh", min_value=0, value=0)
+
+        col7, col8 = st.columns(2)
+        with col7:
+            wind_excess_energy_price = st.number_input("Wind excess energy price EUR/MWh", min_value=0, value=0)
+        with col8:
+            solar_excess_energy_price = st.number_input("PV excess energy price EUR/MWh", min_value=0, value=0)
+
+        col5, col6 = st.columns(2)
+        with col5:
+            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
+        with col6:
+            missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
+
+        with st.expander("Battery Storage Settings"):
+            col1, col2 = st.columns(2)
+            with col1:
+                battery_1h_mw = st.number_input("1h Battery Capacity MW", min_value=0, value=0)
+            with col2:
+                battery_1h_price = st.number_input("BESS 1h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 1h", battery_1h_mw, battery_1h_price)
+
+            col3, col4 = st.columns(2)
+            with col3:
+                battery_2h_mw = st.number_input("2h Battery Capacity, MW", min_value=0, value=0)
+            with col4:
+                battery_2h_price = st.number_input("BESS 2h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 2h", battery_2h_mw, battery_2h_price)
+
+            col5, col6 = st.columns(2)
+            with col5:
+                battery_4h_mw = st.number_input("4h Battery Capacity, MW", min_value=0, value=0)
+            with col6:
+                battery_4h_price = st.number_input("BESS 4h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 4h", battery_4h_mw, battery_4h_price)
+
+            col7, col8 = st.columns(2)
+            with col7:
+                battery_6h_mw = st.number_input("6h Battery Capacity, MW", min_value=0, value=0)
+            with col8:
+                battery_6h_price = st.number_input("BESS 6h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 6h", battery_6h_mw, battery_6h_price)
+
+            col9, col10 = st.columns(2)
+            with col9:
+                battery_8h_mw = st.number_input("8h Battery Capacity, MW", min_value=0, value=0)
+            with col10:
+                battery_8h_price = st.number_input("BESS 8h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 8h", battery_8h_mw, battery_8h_price)
+
+            col11, col12 = st.columns(2)
+            with col11:
+                hydro_storage_mw = st.number_input("Hydro Storage, MW", min_value=0, value=0)
+            with col12:
+                hydro_storage_price = st.number_input("Pumped Hydro annual payment, EUR", min_value=0, value=0)
+            validate_pair("Pumped Hydro", hydro_storage_mw, hydro_storage_price)
+
+        run_button_manual = st.button("Run Simulation")
+elif simulation_mode == "Upload File (Batch Mode)":
+    with st.sidebar:
+        with open(SIMULATION_INPUT, "rb") as f:
+            st.download_button(
+                label="📥 Download Simulation Input Template",
+                file_name="simulation_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                data=f.read()
+            )
+
+        st.subheader("Upload File (Batch Mode)")
+        uploaded_file = st.file_uploader("Choose a file to upload")
+        run_button_batch = st.button("Run Simulation")
+
 if run_button_batch:
     with st.spinner("Running simulation..."):
         if uploaded_file:
@@ -296,12 +293,12 @@ if run_button_batch:
                 battery_8h_price = row["battery_8h_price"]
                 hydro_storage_price = row["hydro_storage_price"]
                 missing_energy_price = row["missing_energy_price"]
-                battery_1h = row["battery_1h_mw"]
-                battery_2h = row["battery_2h_mw"]
-                battery_4h = row["battery_4h_mw"]
-                battery_6h = row["battery_6h_mw"]
-                battery_8h = row["battery_8h_mw"]
-                hydro_storage = row["hydro_mw"]
+                battery_1h_mw = row["battery_1h_mw"]
+                battery_2h_mw = row["battery_2h_mw"]
+                battery_4h_mw = row["battery_4h_mw"]
+                battery_6h_mw = row["battery_6h_mw"]
+                battery_8h_mw = row["battery_8h_mw"]
+                hydro_storage_mw = row["hydro_mw"]
                 bess_rte = 0.86
                 hydro_rte = 0.9
 
@@ -325,12 +322,12 @@ if run_button_batch:
                     missing_energy_price=missing_energy_price,
                     wind_excess_energy_price=wind_excess_energy_price,
                     solar_excess_energy_price=solar_excess_energy_price,
-                    battery_1h_mw=battery_1h,
-                    battery_2h_mw=battery_2h,
-                    battery_4h_mw=battery_4h,
-                    battery_6h_mw=battery_6h,
-                    battery_8h_mw=battery_8h,
-                    hydro_mw=hydro_storage,
+                    battery_1h_mw=battery_1h_mw,
+                    battery_2h_mw=battery_2h_mw,
+                    battery_4h_mw=battery_4h_mw,
+                    battery_6h_mw=battery_6h_mw,
+                    battery_8h_mw=battery_8h_mw,
+                    hydro_mw=hydro_storage_mw,
                     bess_rte=0.86,
                     hydro_rte=0.9,
                     simulation_id=k
@@ -353,7 +350,6 @@ if run_button_batch:
             )
 
             st.dataframe(result_df)
-
 elif run_button_manual:
     with st.spinner("Running simulation..."):
 
@@ -376,12 +372,12 @@ elif run_button_manual:
             missing_energy_price=missing_energy_price,
             wind_excess_energy_price=wind_excess_energy_price,
             solar_excess_energy_price=solar_excess_energy_price,
-            battery_1h_mw=battery_1h,
-            battery_2h_mw=battery_2h,
-            battery_4h_mw=battery_4h,
-            battery_6h_mw=battery_6h,
-            battery_8h_mw=battery_8h,
-            hydro_mw=hydro_storage,
+            battery_1h_mw=battery_1h_mw,
+            battery_2h_mw=battery_2h_mw,
+            battery_4h_mw=battery_4h_mw,
+            battery_6h_mw=battery_6h_mw,
+            battery_8h_mw=battery_8h_mw,
+            hydro_mw=hydro_storage_mw,
             bess_rte=0.86,
             hydro_rte=0.9
         )
@@ -427,6 +423,17 @@ elif run_button_manual:
             "Missing energy VWAP, EUR/MWh", "Excess energy VWAP, EUR/MWh"
         ]
 
+        battery_cycles = [
+            "BESS 1h avg cycles", "BESS 2h avg cycles",
+            "BESS 4h avg cycles", "BESS 6h avg cycles",
+            "BESS 8h avg cycles", "Hydro avg cycles"
+        ]
+
+        battery_hours = [
+            "BESS 1h zero hours", "BESS 2h zero hours",
+            "BESS 4h zero hours", "BESS 6h zero hours",
+            "BESS 8h zero hours"
+        ]
 
         # Helper to extract, set index, and add average
         def format_summary_block(df, cols):
@@ -440,6 +447,8 @@ elif run_button_manual:
         base_df = format_summary_block(result_df, baseload_cols)
         excess_df = format_summary_block(result_df, excess_cols)
         vwap_df = format_summary_block(result_df, vwap_cols)
+        battery_cycles_df = format_summary_block(result_df, battery_cycles)
+        battery_hours_df = format_summary_block(result_df, battery_hours)
 
         # ---- 2. Display side-by-side with Streamlit columns ----
 
@@ -463,6 +472,15 @@ elif run_button_manual:
         with col4:
             st.markdown("**VWAP Metrics**")
             st.dataframe(vwap_df)
+
+        col5, col6 = st.columns(2)
+        with col5:
+            st.markdown("**Storage Cycles Metrics**")
+            st.dataframe(battery_cycles_df)
+        with col6:
+            st.markdown("**Storage Zero Hours Metrics**")
+            st.dataframe(battery_hours_df)
+
         with st.expander("All Results"):
             st.dataframe(result_df)
             csv_buffer = BytesIO()
