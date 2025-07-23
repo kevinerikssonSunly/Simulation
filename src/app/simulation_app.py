@@ -286,19 +286,21 @@ if run_button_batch:
                 baseload = row["baseload"]
                 wind_price = row["wind_price"]
                 solar_price = row["solar_price"]
+                wind_excess_energy_price = row["wind_excess_energy_price"]
+                solar_excess_energy_price = row["solar_excess_energy_price"]
+                missing_energy_price = row["missing_energy_price"]
                 battery_1h_price = row["battery_1h_price"]
                 battery_2h_price = row["battery_2h_price"]
                 battery_4h_price = row["battery_4h_price"]
                 battery_6h_price = row["battery_6h_price"]
                 battery_8h_price = row["battery_8h_price"]
                 hydro_storage_price = row["hydro_storage_price"]
-                missing_energy_price = row["missing_energy_price"]
                 battery_1h_mw = row["battery_1h_mw"]
                 battery_2h_mw = row["battery_2h_mw"]
                 battery_4h_mw = row["battery_4h_mw"]
                 battery_6h_mw = row["battery_6h_mw"]
                 battery_8h_mw = row["battery_8h_mw"]
-                hydro_storage_mw = row["hydro_mw"]
+                hydro_storage_mw = row["hydro_storage_mw"]
                 bess_rte = 0.86
                 hydro_rte = 0.9
 
