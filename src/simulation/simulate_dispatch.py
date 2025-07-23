@@ -97,7 +97,6 @@ def simulate_dispatch(
 
         used_storage_names = [s.name for s in storages]
 
-        # Iterate over all possible storage names (even if not active)
         for storage_name in ["BESS 1h", "BESS 2h", "BESS 4h", "BESS 6h", "BESS 8h", "Hydro"]:
             if storage_name in used_storage_names:
                 storage = next(s for s in storages if s.name == storage_name)
@@ -108,7 +107,6 @@ def simulate_dispatch(
                 storage.reset_yearly_energy()
                 storage.reset_yearly_zero_hours()
             else:
-                # Explicitly add zeros if storage was not used
                 result[f"{storage_name} avg cycles"] = 0.0
                 result[f"{storage_name} zero hours ratio, %"] = 0.0
 

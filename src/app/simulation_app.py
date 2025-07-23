@@ -434,7 +434,7 @@ elif run_button_manual:
         battery_hours = [
             "BESS 1h zero hours ratio, %", "BESS 2h zero hours ratio, %",
             "BESS 4h zero hours ratio, %", "BESS 6h zero hours ratio, %",
-            "BESS 8h zero hours ratio, %"
+            "BESS 8h zero hours ratio, %", "Hydro zero hours ratio, %",
         ]
 
         # Helper to extract, set index, and add average
