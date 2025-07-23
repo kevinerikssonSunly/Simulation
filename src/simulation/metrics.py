@@ -55,10 +55,10 @@ def compile_result(
     return {
         "Simulation id": "",
         "year": year,
-        "BL 1, EUR/MWh": "",
-        "BL 2, EUR/MWh": "",
-        "Break-even - Fixed Missing, EUR/MWh": "",
-        "Break-even - VWAP Missing, EUR/MWh": "",
+        "BL 1 - Fixed Missing EUR/MWh": "",
+        "BL 2 - VWAP Missing EUR/MWh": "",
+        "Break-even 1 - Fixed Missing, EUR/MWh": "",
+        "Break-even 2 - VWAP Missing, EUR/MWh": "",
         "Overproduction share, %": "",
         "Annual avg spot, EUR/MWh": "",
         "Res share in BL, %": round((m["produced_total"] / expected_baseload) * 100, 2) if expected_baseload > 0 and pd.notna(

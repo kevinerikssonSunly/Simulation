@@ -57,6 +57,9 @@ with st.sidebar:
         st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
         st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Power-as-Produced).")
 
+        st.markdown("**Wind excess energy price EUR/MWh** – Revenue from each MWh of excess energy sold from wind.")
+        st.markdown("**PV excess energy price EUR/MWh** – Revenue from each MWh excess energy sold from solar.")
+
         st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
 
         st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
@@ -80,51 +83,40 @@ with st.sidebar:
         st.markdown("**Year** – Simulation year this result corresponds to.")
 
         st.markdown(
-            "**BL 1, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
+            "**BL 1 - Fixed Missing, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
         st.markdown(
-            "**BL 2, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
+            "**BL 2 - VWAP Missing, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
 
-        st.markdown(
-            "**Break-even 1, EUR/MWh** – Required price to break even based on production, storage cost, excess sellback, and missing energy cost (fixed price).")
-        st.markdown("**Break-even 2, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
+        st.markdown("**Break-even 1 - Fixed Missing, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback, and missing energy cost (fixed price).")
+        st.markdown("**Break-even 2 - VWAP Missing, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
 
         st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
-        st.markdown(
-            "**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
+        st.markdown("**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
         st.markdown("**Nr of green BL hours, h** – Number of hours when baseload demand was fully met.")
         st.markdown("**Nr of hours, h** – Total number of hours in the simulated year.")
 
-        st.markdown(
-            "**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
+        st.markdown("**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
         st.markdown("**PV cap price, EUR/MWh** – VWAP of solar (PV) energy sent to the grid.")
-        st.markdown(
-            "**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
-        st.markdown(
-            "**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
+        st.markdown("**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
+        st.markdown("**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
 
         st.markdown("**Baseload, MWh** – Total annual energy demand as determined by the baseload level (in MWh).")
-        st.markdown(
-            "**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
+        st.markdown("**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
 
-        st.markdown(
-            "**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
-        st.markdown(
-            "**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
+        st.markdown("**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
+        st.markdown("**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
 
         st.markdown("**Wind prod, MWh** – Total annual energy produced by wind farms.")
         st.markdown("**Solar prod, MWh** – Total annual energy produced by solar panels.")
-        st.markdown(
-            "**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
+        st.markdown("**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
         st.markdown("**Solar in BL, MWh** – Same as above, but for solar energy.")
 
         st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
         st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
-        st.markdown(
-            "**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
+        st.markdown("**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
         st.markdown("**Redundant solar, MWh** – Same as above, but for solar.")
 
-        st.markdown(
-            "**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
+        st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
         st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
 if simulation_mode == "Manual Input":
     with st.sidebar:
@@ -234,7 +226,6 @@ def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
     df_plot["baseload"] = baseload_value
 
-    # Compute contribution of battery that actually helps meet baseload
     df_plot["battery_to_bl"] = np.minimum(
         np.maximum(df_plot["baseload"] - df_plot["produced_energy"], 0),
         df_plot["battery_discharged"]
@@ -252,19 +243,35 @@ def plot_energy_stack_st_altair(df, baseload_value):
     # Convert to long-form
     df_melt = df_plot.melt(id_vars="Date", var_name="Source", value_name="Value")
 
-    category_order = ["Battery Discharge", "Direct Production", "Missing Energy"]
-
     chart = alt.Chart(df_melt).mark_bar(size=1).encode(
         x=alt.X("Date:T", title="Date"),
         y=alt.Y("Value:Q", stack="zero", title="Average Power (MW)"),
-        color=alt.Color("Source:N", scale=alt.Scale(scheme="category10"), sort=category_order),
+        color=alt.Color("Source:N", scale=alt.Scale(scheme="category10"), legend=None),
         order=alt.Order("Source:N", sort="ascending"),
         tooltip=["Date:T", "Source:N", "Value:Q"]
     ).properties(
         width=400,
-        height=400,
-        title="Daily Average Energy Supply vs Baseload"
+        height=400
     ).interactive()
+
+    st.markdown("**Daily Average Energy Supply vs Baseload**")
+
+    st.markdown("""
+        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center;">
+                <div style="width: 15px; height: 15px; background-color: #1f77b4; margin-right: 5px; border-radius: 2px;"></div>
+                <span style="font-size: 14px;">Direct Production</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 15px; height: 15px; background-color: orange; margin-right: 5px; border-radius: 2px;"></div>
+                <span style="font-size: 14px;">Battery Discharge</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 15px; height: 15px; background-color: green; margin-right: 5px; border-radius: 2px;"></div>
+                <span style="font-size: 14px;">Missing Energy</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     return chart
 
@@ -385,22 +392,77 @@ elif run_button_manual:
         # Extract and pivot key KPIs
         kpi_df = result_df[[
             "year",
-            "Break-even - Fixed Missing, EUR/MWh",
-            "Break-even - VWAP Missing, EUR/MWh",
+            "Break-even 1 - Fixed Missing, EUR/MWh",
+            "Break-even 2 - VWAP Missing, EUR/MWh",
             "Res share in BL, %",
             "Overproduction share, %"
         ]].copy()
 
-        # Set year as index so it appears as the Y-axis
         kpi_df.set_index("year", inplace=True)
-
-        # Compute average row (rounded before assigning)
         average_row = kpi_df.mean()
         kpi_df.loc["Average"] = average_row
 
         st.subheader("Key Results")
         st.dataframe(kpi_df)
+        # ---- 1. Create separate grouped metric tables ----
 
+        # Define groups
+        production_cols = [
+            "Wind prod, MWh", "Solar prod, MWh",
+            "Wind in BL, MWh", "Solar in BL, MWh"
+        ]
+
+        baseload_cols = [
+            "Baseload, MWh", "Missing energy, MWh", "Cycle loss, MWh",
+            "Nr of green BL hours, h", "Nr of hours, h"
+        ]
+
+        excess_cols = [
+            "Excess wind, MWh", "Excess solar, MWh",
+            "Redundant wind, MWh", "Redundant solar, MWh"
+        ]
+
+        vwap_cols = [
+            "Wind cap price, EUR/MWh", "PV cap price, EUR/MWh",
+            "Missing energy VWAP, EUR/MWh", "Excess energy VWAP, EUR/MWh"
+        ]
+
+
+        # Helper to extract, set index, and add average
+        def format_summary_block(df, cols):
+            block = df[["year"] + cols].copy()
+            block.set_index("year", inplace=True)
+            block.loc["Average"] = block.mean()
+            return block.round(2)
+
+
+        prod_df = format_summary_block(result_df, production_cols)
+        base_df = format_summary_block(result_df, baseload_cols)
+        excess_df = format_summary_block(result_df, excess_cols)
+        vwap_df = format_summary_block(result_df, vwap_cols)
+
+        # ---- 2. Display side-by-side with Streamlit columns ----
+
+        st.subheader("Detailed Metrics by Category")
+
+        col1, col2= st.columns(2)
+
+        with col1:
+            st.markdown("**Production & Usage**")
+            st.dataframe(prod_df)
+
+        with col2:
+            st.markdown("**Baseload & Gaps**")
+            st.dataframe(base_df)
+
+        col3, col4= st.columns(2)
+        with col3:
+            st.markdown("**Excess / Redundancy**")
+            st.dataframe(excess_df)
+
+        with col4:
+            st.markdown("**VWAP Metrics**")
+            st.dataframe(vwap_df)
         with st.expander("All Results"):
             st.dataframe(result_df)
             csv_buffer = BytesIO()
@@ -414,13 +476,35 @@ elif run_button_manual:
         for tab, year in zip(tabs, summary_df["year"].unique()):
             with tab:
                 st.subheader(f"Charts for Year {year}")
-                year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
-                st.markdown("Missing Energy")
-                st.bar_chart(year_data["missing_energy"])
-                st.markdown("Excess Energy")
-                st.bar_chart(year_data["excess_energy"])
                 yearly_df_year = yearly_df[yearly_df.index.year == year]
-
-                # Plot filtered
+                year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
                 st.altair_chart(plot_energy_stack_st_altair(yearly_df_year, baseload_value=baseload),
                                 use_container_width=True)
+                year_data_reset = year_data.reset_index()
+
+                # Missing Energy chart
+                missing_chart = (
+                    alt.Chart(year_data_reset)
+                    .mark_bar(color="#75cfff")
+                    .encode(
+                        x=alt.X("price_bin:O", title="Spot Price Bin (EUR/MWh)"),
+                        y=alt.Y("missing_energy:Q", title="Average Missing Energy (MWh)"),
+                        tooltip=["price_bin", "missing_energy"]
+                    )
+                    .properties(title="Missing Energy by Price Bin", height=400)
+                )
+
+                # Excess Energy chart
+                excess_chart = (
+                    alt.Chart(year_data_reset)
+                    .mark_bar(color="#75cfff")
+                    .encode(
+                        x=alt.X("price_bin:O", title="Spot Price Bin (EUR/MWh)"),
+                        y=alt.Y("excess_energy:Q", title="Average Excess Energy (MWh)"),
+                        tooltip=["price_bin", "excess_energy"]
+                    )
+                    .properties(title="Excess Energy by Price Bin", height=400)
+                )
+
+                st.altair_chart(missing_chart, use_container_width=True)
+                st.altair_chart(excess_chart, use_container_width=True)

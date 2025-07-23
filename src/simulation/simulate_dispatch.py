@@ -84,10 +84,10 @@ def simulate_dispatch(
 
         brake_even_1 = calculate_break_even_price_1(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, result["Excess wind, MWh"], wind_excess_energy_price, result["Excess solar, MWh"], solar_excess_energy_price, result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year))
         brake_even_2 = calculate_break_even_price_2(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, result["Excess wind, MWh"], wind_excess_energy_price, result["Excess solar, MWh"], solar_excess_energy_price, result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year))
-        result["BL 1, EUR/MWh"] = round(bl_price_1, 2)
-        result["BL 2, EUR/MWh"] = round(bl_price_2, 2)
-        result["Break-even - Fixed Missing, EUR/MWh"] = round(brake_even_1, 2)
-        result["Break-even - VWAP Missing, EUR/MWh"] = round(brake_even_2, 2)
+        result["BL 1 - Fixed Missing EUR/MWh"] = round(bl_price_1, 2)
+        result["BL 2 - VWAP Missing EUR/MWh"] = round(bl_price_2, 2)
+        result["Break-even 1 - Fixed Missing, EUR/MWh"] = round(brake_even_1, 2)
+        result["Break-even 2 - VWAP Missing, EUR/MWh"] = round(brake_even_2, 2)
         result["Annual avg spot, EUR/MWh"] = hourly_df["Spot"].mean()
         result["Overproduction share, %"] = calculate_overproduction_share(excess_energy, redundant_energy, wind_prod_year.sum(), solar_prod_year.sum())
         result["Simulation id"] = simulation_id
