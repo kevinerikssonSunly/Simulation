@@ -39,7 +39,6 @@ def run_all_scenarios(
         battery_8h_price = 0,
         hydro_storage_price = 0,
         missing_energy_price = 300,
-        excess_energy_price=90,
         battery_1h_mw = 0,
         battery_2h_mw = 0,
         battery_4h_mw = 150,

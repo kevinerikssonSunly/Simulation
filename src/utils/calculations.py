@@ -20,12 +20,12 @@ def share_allocation(wind: float, solar: float, surplus: float) -> (float, float
         surplus * (solar / total)
     )
 
-def calculate_break_even_price_1(wind_in_baseload, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_wind, wind_excess_energy_price, excess_solar, solar_excess_energy_price, missing_energy, missing_energy_price, baseload):
-    baseload_price = ((wind_in_baseload * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_wind * wind_excess_energy_price) - (excess_solar * solar_excess_energy_price) + (missing_energy * missing_energy_price)) / baseload
+def calculate_break_even_price_1(wind_in_baseload, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_energy, excess_energy_vwap, missing_energy, missing_energy_price, baseload):
+    baseload_price = ((wind_in_baseload * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_energy * excess_energy_vwap) + (missing_energy * missing_energy_price)) / baseload
     return baseload_price
 
-def calculate_break_even_price_2(total_wind, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_wind, wind_excess_energy_price, excess_solar, solar_excess_energy_price, missing_energy, missing_energy_vwap, baseload):
-    baseload_price = ((total_wind * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_wind * wind_excess_energy_price) - (excess_solar * solar_excess_energy_price) + (missing_energy * missing_energy_vwap)) / baseload
+def calculate_break_even_price_2(total_wind, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_energy, excess_energy_vwap, missing_energy, missing_energy_vwap, baseload):
+    baseload_price = ((total_wind * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_energy * excess_energy_vwap) + (missing_energy * missing_energy_vwap)) / baseload
     return baseload_price
 
 def calculate_bl_price_1(wind_in_baseload, wind_PaP, solar_in_baseload, pv_PaP, bess_annual_payments, missing_energy, missing_energy_vwap, baseload):
@@ -36,6 +36,6 @@ def calculate_bl_price_2(wind_in_baseload, wind_PaP, solar_in_baseload, pv_PaP, 
     baseload_price = ((wind_in_baseload * wind_PaP) + (solar_in_baseload * pv_PaP) + bess_annual_payments + (missing_energy * missing_energy_price)) / baseload
     return baseload_price
 
-def calculate_overproduction_share(excess_energy, redundant_energy, total_wind, total_pv):
+def calculate_overproduction_share(excess_energy, total_wind, total_pv):
     prod_energy = total_wind + total_pv
-    return round((excess_energy + redundant_energy) / prod_energy * 100, 2)
+    return round((excess_energy) / prod_energy * 100, 2)

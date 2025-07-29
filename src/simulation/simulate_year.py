@@ -1,24 +1,23 @@
 from typing import Dict, Any, List
-
 import pandas as pd
 
 from interfaces.StorageUnit import StorageUnit
 from simulation.metrics import compile_result
 from utils.calculations import vwap_energy, share_allocation
 
-
-def simulate_year_dispatch(metrics: Dict[str, Any],
-                           year: int,
-                           wind_year: pd.Series,
-                           solar_year: pd.Series,
-                           spot_prices: pd.DataFrame,
-                           storages: List[StorageUnit],
-                           baseload: float,
-                           wind_cap: float,
-                           solar_cap: float,
-                           battery_config: Dict[int, float],
-                           hydro_config: Dict[str, Any]
-                           ) -> tuple[Dict, pd.DataFrame]:
+def simulate_year_dispatch(
+    metrics: Dict[str, Any],
+    year: int,
+    wind_year: pd.Series,
+    solar_year: pd.Series,
+    spot_prices: pd.DataFrame,
+    storages: List[StorageUnit],
+    baseload: float,
+    wind_cap: float,
+    solar_cap: float,
+    battery_config: Dict[int, float],
+    hydro_config: Dict[str, Any]
+) -> tuple[Dict, pd.DataFrame]:
     total_hours = len(wind_year)
     wind_total = wind_year.sum()
     solar_total = solar_year.sum()
@@ -39,7 +38,6 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
         hourly_records.append(result)
         cycle_loss_total += cycle_loss
 
-
     metrics["cycle_loss_total"] = cycle_loss_total
     metrics["missing_energy"] = max(0, metrics["missing_energy"] - cycle_loss_total)
 
@@ -57,24 +55,79 @@ def simulate_year_dispatch(metrics: Dict[str, Any],
             year, wind_cap, solar_cap, baseload, total_hours,
             battery_config[1], battery_config[2], battery_config[4],
             battery_config[6], battery_config[8], hydro_config["charge_mw"],
-            wind_baseload, solar_baseload, wind_total, solar_total, vwap_missing, vwap_excess,vwap_wind, vwap_solar, metrics
+            wind_baseload, solar_baseload, wind_total, solar_total, vwap_missing, vwap_excess, vwap_wind, vwap_solar, metrics
         ),
         hourly_df
     )
 
+def sequential_bess_charging(storages, wind_surplus, solar_surplus):
+    """
+    Charges storages in sequential order: each BESS gets up to its MW limit for the hour,
+    as long as it has room. Keeps going until surplus runs out or all BESS are full.
+    Returns:
+      - remaining_wind (float)
+      - remaining_solar (float)
+      - total_cycle_loss (float)
+      - total_charged (float)
+    """
+    remaining_wind = max(0.0, wind_surplus)
+    remaining_solar = max(0.0, solar_surplus)
+    total_cycle_loss = 0.0
+    total_charged = 0.0
+
+    for storage in storages:
+        # Available headroom (in MWh)
+        soc_headroom = max(0.0, storage.max_volume - storage.soc)
+        if soc_headroom < 1e-6:
+            continue  # This BESS is full
+
+        # BESS can only accept up to its MW rating per hour, and not more than headroom or surplus
+        slice_mwh = min(storage.max_charge, soc_headroom, remaining_wind + remaining_solar)
+        if slice_mwh < 1e-6:
+            continue
+
+        # Allocate slice in wind/solar proportion
+        total_surplus = remaining_wind + remaining_solar
+        wind_frac = remaining_wind / total_surplus if total_surplus > 0 else 0.0
+        solar_frac = 1.0 - wind_frac
+
+        slice_wind = slice_mwh * wind_frac
+        slice_solar = slice_mwh * solar_frac
+
+        # Charge storage, get actual charged and leftovers
+        charged, leftover_wind, leftover_solar, loss = storage.charge(slice_wind, slice_solar)
+
+        # Update remaining surplus: only subtract what was actually charged
+        actual_charged_wind = slice_wind - leftover_wind
+        actual_charged_solar = slice_solar - leftover_solar
+
+        remaining_wind = max(0.0, remaining_wind - actual_charged_wind)
+        remaining_solar = max(0.0, remaining_solar - actual_charged_solar)
+
+        total_charged += actual_charged_wind + actual_charged_solar
+        total_cycle_loss += max(0.0, loss)
+
+        # If we run out of surplus, break
+        if remaining_wind + remaining_solar < 1e-6:
+            break
+
+    return remaining_wind, remaining_solar, total_cycle_loss, total_charged
+
 def simulate_hour(
-        wind: float,
-        solar: float,
-        storages: List[StorageUnit],
-        baseload: float,
-        timestamp: pd.Timestamp,
-        metrics: Dict
+    wind: float,
+    solar: float,
+    storages: List[StorageUnit],
+    baseload: float,
+    timestamp: pd.Timestamp,
+    metrics: Dict
 ) -> tuple[Dict[str, float], float]:
 
     total_gen = wind + solar
-    missing_energy = excess_energy = 0.0
+    missing_energy = 0.0
+    excess_energy = 0.0
     cycle_loss_total = 0.0
     discharged_total = 0.0
+    charged_total = 0.0
 
     if total_gen >= baseload:
         wind_in_baseload, solar_in_baseload = share_allocation(wind, solar, baseload)
@@ -88,11 +141,11 @@ def simulate_hour(
         wind_surplus, solar_surplus = share_allocation(wind, solar, surplus)
         initial_wind_surplus, initial_solar_surplus = wind_surplus, solar_surplus
 
-        for storage in storages:
-            charged, wind_surplus, solar_surplus, loss = storage.charge(wind_surplus, solar_surplus)
-            cycle_loss_total += loss
-            if wind_surplus == 0 and solar_surplus == 0:
-                break
+        wind_surplus, solar_surplus, loss, charged = sequential_bess_charging(
+            storages, wind_surplus, solar_surplus
+        )
+        cycle_loss_total += loss
+        charged_total += charged
 
         bess_remaining_wind = wind_surplus
         bess_remaining_solar = solar_surplus
@@ -135,6 +188,7 @@ def simulate_hour(
 
     return {
         "battery_discharged": discharged_total,
+        "battery_charged": charged_total,
         "missing_energy": missing_energy,
         "excess_energy": excess_energy,
         "wind_total": wind,

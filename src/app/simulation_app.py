@@ -6,6 +6,7 @@ import pandas as pd
 from io import BytesIO
 import numpy as np
 import altair as alt
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
@@ -64,7 +65,7 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
     return summary
 def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
-    df_plot = df_plot[["produced_energy", "battery_discharged", "missing_energy"]].fillna(0)
+    df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged", "missing_energy"]].fillna(0)
     df_plot["baseload"] = baseload_value
 
     df_plot["battery_to_bl"] = np.minimum(
@@ -72,13 +73,17 @@ def plot_energy_stack_st_altair(df, baseload_value):
         df_plot["battery_discharged"]
     )
 
-    # Compute unmet energy after production + battery
     df_plot["missing_to_bl"] = np.maximum(
         df_plot["baseload"] - df_plot["produced_energy"] - df_plot["battery_to_bl"], 0
     )
 
-    df_plot = df_plot[["produced_energy", "battery_to_bl", "missing_to_bl"]].copy()
-    df_plot.columns = ["Battery Discharge", "Direct Production", "Missing Energy"]
+    df_plot["direct_to_battery"] = np.maximum(
+        np.minimum(df_plot["battery_charged"], df_plot["produced_energy"] - df_plot["baseload"]),
+        0
+    )
+
+    df_plot = df_plot[["produced_energy", "battery_to_bl" ,"missing_to_bl", "direct_to_battery"]].copy()
+    df_plot.columns = ["Battery Discharge", "Charged to Battery", "Direct Production", "Missing Energy"]
     df_plot["Date"] = df_plot.index
 
     # Convert to long-form
@@ -95,7 +100,7 @@ def plot_energy_stack_st_altair(df, baseload_value):
         height=400
     ).interactive()
 
-    st.markdown("**Daily Average Energy Supply vs Baseload**")
+    st.markdown("**Daily Energy Supply vs Baseload**")
 
     st.markdown("""
         <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
@@ -110,6 +115,10 @@ def plot_energy_stack_st_altair(df, baseload_value):
             <div style="display: flex; align-items: center;">
                 <div style="width: 15px; height: 15px; background-color: green; margin-right: 5px; border-radius: 2px;"></div>
                 <span style="font-size: 14px;">Missing Energy</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 15px; height: 15px; background-color: red; margin-right: 5px; border-radius: 2px;"></div>
+                <span style="font-size: 14px;">Charged to battery</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -202,12 +211,6 @@ if simulation_mode == "Manual Input":
         with col4:
             solar_price = st.number_input("PV PaP price EUR/MWh", min_value=0, value=0)
 
-        col7, col8 = st.columns(2)
-        with col7:
-            wind_excess_energy_price = st.number_input("Wind excess energy price EUR/MWh", min_value=0, value=0)
-        with col8:
-            solar_excess_energy_price = st.number_input("PV excess energy price EUR/MWh", min_value=0, value=0)
-
         col5, col6 = st.columns(2)
         with col5:
             baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
@@ -286,8 +289,6 @@ if run_button_batch:
                 baseload = row["baseload"]
                 wind_price = row["wind_price"]
                 solar_price = row["solar_price"]
-                wind_excess_energy_price = row["wind_excess_energy_price"]
-                solar_excess_energy_price = row["solar_excess_energy_price"]
                 missing_energy_price = row["missing_energy_price"]
                 battery_1h_price = row["battery_1h_price"]
                 battery_2h_price = row["battery_2h_price"]
@@ -322,8 +323,6 @@ if run_button_batch:
                     battery_8h_price=battery_8h_price,
                     hydro_storage_price=hydro_storage_price,
                     missing_energy_price=missing_energy_price,
-                    wind_excess_energy_price=wind_excess_energy_price,
-                    solar_excess_energy_price=solar_excess_energy_price,
                     battery_1h_mw=battery_1h_mw,
                     battery_2h_mw=battery_2h_mw,
                     battery_4h_mw=battery_4h_mw,
@@ -338,7 +337,7 @@ if run_button_batch:
                 all_results.extend(results)
 
             result_df = pd.DataFrame(all_results)
-            st.success("✅ Batch simulation complete!")
+            st.success("Batch simulation complete!")
 
             excel_buffer = io.BytesIO()
             result_df.to_excel(excel_buffer, index=False, engine='openpyxl')
@@ -372,8 +371,6 @@ elif run_button_manual:
             battery_8h_price=battery_8h_price,
             hydro_storage_price=hydro_storage_price,
             missing_energy_price=missing_energy_price,
-            wind_excess_energy_price=wind_excess_energy_price,
-            solar_excess_energy_price=solar_excess_energy_price,
             battery_1h_mw=battery_1h_mw,
             battery_2h_mw=battery_2h_mw,
             battery_4h_mw=battery_4h_mw,
@@ -401,8 +398,9 @@ elif run_button_manual:
         kpi_df.loc["Average"] = average_row
 
         st.subheader("Key Results")
+
+
         st.dataframe(kpi_df)
-        # ---- 1. Create separate grouped metric tables ----
 
         # Define groups
         production_cols = [
@@ -411,13 +409,13 @@ elif run_button_manual:
         ]
 
         baseload_cols = [
-            "Baseload, MWh", "Missing energy, MWh", "Cycle loss, MWh",
+            "Baseload, MWh",
             "Nr of green BL hours, h", "Nr of hours, h"
         ]
 
         excess_cols = [
             "Excess wind, MWh", "Excess solar, MWh",
-            "Redundant wind, MWh", "Redundant solar, MWh"
+            "Missing energy, MWh", "Cycle loss, MWh"
         ]
 
         vwap_cols = [
@@ -468,7 +466,7 @@ elif run_button_manual:
 
         col3, col4= st.columns(2)
         with col3:
-            st.markdown("**Excess / Redundancy**")
+            st.markdown("**Excess / Missing**")
             st.dataframe(excess_df)
 
         with col4:
@@ -498,6 +496,7 @@ elif run_button_manual:
                 st.subheader(f"Charts for Year {year}")
                 yearly_df_year = yearly_df[yearly_df.index.year == year]
                 year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
+
                 st.altair_chart(plot_energy_stack_st_altair(yearly_df_year, baseload_value=baseload),
                                 use_container_width=True)
                 year_data_reset = year_data.reset_index()

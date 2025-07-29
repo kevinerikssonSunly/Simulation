@@ -78,8 +78,8 @@ def compile_result(
         "Solar in BL, MWh": round(solar_baseload),
         "Excess wind, MWh": round(m["excess_wind"]),
         "Excess solar, MWh": round(m["excess_solar"]),
-        "Redundant wind, MWh": round(m["redundant_wind"]),
-        "Redundant solar, MWh": round(m["redundant_solar"]),
+        #"Redundant wind, MWh": round(m["redundant_wind"]),"
+        #"Redundant solar, MWh": round(m["redundant_solar"]),
         "BESS 1h avg cycles": "",
         "BESS 1h zero hours ratio, %": "",
         "BESS 2h avg cycles": "",
