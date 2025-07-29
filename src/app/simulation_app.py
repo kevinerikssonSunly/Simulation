@@ -6,7 +6,6 @@ import pandas as pd
 from io import BytesIO
 import numpy as np
 import altair as alt
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
