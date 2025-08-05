@@ -136,7 +136,7 @@ def plot_energy_stack_st_altair(df, baseload_value):
     ).interactive()
 
     # Legend
-    st.markdown("**Daily Energy Supply vs Baseload (Incl. Surplus)**")
+    st.markdown("**Daily Energy Supply vs Baseload**")
 
     st.markdown("""
     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
@@ -173,9 +173,6 @@ with st.sidebar:
 
         st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
         st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Pay-as-Produced).")
-
-        st.markdown("**Wind excess energy price EUR/MWh** – Revenue from each MWh of excess energy sold from wind.")
-        st.markdown("**PV excess energy price EUR/MWh** – Revenue from each MWh excess energy sold from solar.")
 
         st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
 
@@ -229,8 +226,6 @@ with st.sidebar:
 
         st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
         st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
-        st.markdown("**Redundant wind, MWh** – Wind energy that could not be used or exported (e.g., due to grid/storage limits).")
-        st.markdown("**Redundant solar, MWh** – Same as above, but for solar.")
 
         st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
         st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
