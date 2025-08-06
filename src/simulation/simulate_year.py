@@ -169,16 +169,23 @@ def simulate_hour(
     else:
         shortfall = baseload - total_gen
 
+        metrics["wind_in_baseload"] += wind
+        metrics["solar_in_baseload"] += solar
+        wind_discharged = 0
+        solar_discharged = 0
         for storage in storages:
             if shortfall <= 0:
                 break
-            discharged, loss = storage.discharge(shortfall, timestamp)
+            discharged, wind_discharged, solar_discharged, loss = storage.discharge(shortfall, timestamp)
             discharged_total += discharged
             cycle_loss_total += loss
             shortfall -= discharged
 
+
         produced = total_gen + discharged_total
         metrics["produced_total"] += produced
+        metrics["wind_in_baseload"] += wind_discharged
+        metrics["solar_in_baseload"] += solar_discharged
 
         if produced >= baseload:
             metrics["hours_met"] += 1

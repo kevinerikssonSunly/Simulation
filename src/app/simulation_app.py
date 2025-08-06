@@ -419,7 +419,6 @@ elif run_button_manual:
         result_df = pd.DataFrame(results)
         st.success("✅ Simulation complete!")
 
-        # Extract and pivot key KPIs
         kpi_df = result_df[[
             "year",
             "Break-even 1 - Fixed Missing, EUR/MWh",
@@ -455,7 +454,8 @@ elif run_button_manual:
             "Missing energy, MWh", "Cycle loss, MWh"
         ]
 
-        vwap_cols = [
+        price_cols = [
+            "Annual avg spot, EUR/MWh",
             "Wind cap price, EUR/MWh", "PV cap price, EUR/MWh",
             "Missing energy VWAP, EUR/MWh", "Excess energy VWAP, EUR/MWh"
         ]
@@ -483,7 +483,7 @@ elif run_button_manual:
         prod_df = format_summary_block(result_df, production_cols)
         base_df = format_summary_block(result_df, baseload_cols)
         excess_df = format_summary_block(result_df, excess_cols)
-        vwap_df = format_summary_block(result_df, vwap_cols)
+        vwap_df = format_summary_block(result_df, price_cols)
         battery_cycles_df = format_summary_block(result_df, battery_cycles)
         battery_hours_df = format_summary_block(result_df, battery_hours)
 
@@ -507,7 +507,7 @@ elif run_button_manual:
             st.dataframe(excess_df)
 
         with col4:
-            st.markdown("**VWAP Metrics**")
+            st.markdown("**Price Metrics**")
             st.dataframe(vwap_df)
 
         col5, col6 = st.columns(2)

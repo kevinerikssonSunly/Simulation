@@ -7,6 +7,8 @@ class Storage(StorageUnit):
         self.max_volume = storage_volume_MWh
         self.charge_eff = self.discharge_eff = round_trip_eff**0.5
         self.soc = 0
+        self.wind_soc = 0
+        self.solar_soc = 0
         self.total_charged_wind = 0
         self.total_charged_solar = 0
         self.discharge_limit_per_day = 2*storage_volume_MWh
@@ -27,18 +29,23 @@ class Storage(StorageUnit):
         wind_fraction = to_charge_wind_MWh / total_to_charge
         solar_fraction = to_charge_solar_MWh / total_to_charge
 
-        wind_charged = chargeable_raw * wind_fraction
-        solar_charged = chargeable_raw * solar_fraction
+        wind_charged_raw = chargeable_raw * wind_fraction
+        solar_charged_raw = chargeable_raw * solar_fraction
 
-        redundant_wind = max(to_charge_wind_MWh - wind_charged, 0.0)
-        redundant_solar = max(to_charge_solar_MWh - solar_charged, 0.0)
+        wind_charged = wind_charged_raw * self.charge_eff
+        solar_charged = solar_charged_raw * self.charge_eff
 
-        self.total_charged_wind += wind_charged
-        self.total_charged_solar += solar_charged
+        redundant_wind = max(to_charge_wind_MWh - wind_charged_raw, 0.0)
+        redundant_solar = max(to_charge_solar_MWh - solar_charged_raw, 0.0)
 
-        charged = chargeable_raw * self.charge_eff
-        self.soc += charged
-        cycle_loss = chargeable_raw - charged
+        self.total_charged_wind += wind_charged_raw
+        self.total_charged_solar += solar_charged_raw
+
+        self.soc += wind_charged + solar_charged
+        self.wind_soc += wind_charged
+        self.solar_soc += solar_charged
+
+        cycle_loss = chargeable_raw - (wind_charged + solar_charged)
 
         return chargeable_raw, redundant_wind, redundant_solar, cycle_loss
 
@@ -49,23 +56,40 @@ class Storage(StorageUnit):
             self.last_updated_day = current_day
 
         remaining_quota = self.discharge_limit_per_day - self.daily_discharged_energy
-        if remaining_quota <= 0:
-            return 0.0, 0.0
+        if remaining_quota <= 0 or self.soc <= 0:
+            if self.soc <= 0:
+                self.zero_hours += 1
+            return 0.0, 0.0, 0.0, 0.0
 
         possible_discharge = min(self.max_charge, self.soc)
         required_discharge = needed_energy_MWh / self.discharge_eff
         discharged = min(possible_discharge, required_discharge, remaining_quota)
 
+        wind_fraction = self.wind_soc / self.soc if self.soc > 0 else 0.0
+        solar_fraction = self.solar_soc / self.soc if self.soc > 0 else 0.0
+
+        wind_used = discharged * wind_fraction
+        solar_used = discharged * solar_fraction
+
+        # Update state of charge and source-specific SoCs
         self.soc -= discharged
+        self.wind_soc -= wind_used
+        self.solar_soc -= solar_used
+
         self.daily_discharged_energy += discharged
         self.yearly_discharged_energy += discharged
 
         delivered = discharged * self.discharge_eff
+        wind_delivered = wind_used * self.discharge_eff
+        solar_delivered = solar_used * self.discharge_eff
+
         cycle_loss = discharged - delivered
 
-        if delivered == 0: self.zero_hours += 1
+        if delivered == 0:
+            self.zero_hours += 1
 
-        return delivered, cycle_loss
+        return delivered, wind_delivered, solar_delivered, cycle_loss
+
 
     def get_average_cycles_per_year(self):
         return self.yearly_discharged_energy / self.max_volume if self.max_volume > 0 else 0

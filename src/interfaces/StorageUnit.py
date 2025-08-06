@@ -10,7 +10,7 @@ class StorageUnit(ABC):
         pass
 
     @abstractmethod
-    def discharge(self, shortfall: float, timestamp: pd.Timestamp) -> tuple[float, float]:
+    def discharge(self, shortfall: float, timestamp: pd.Timestamp) -> tuple[float, float, float, float]:
         """Returns: discharged_energy, cycle_loss"""
         pass
 
