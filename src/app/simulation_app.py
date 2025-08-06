@@ -424,6 +424,8 @@ elif run_button_manual:
             "year",
             "Break-even 1 - Fixed Missing, EUR/MWh",
             "Break-even 2 - VWAP Missing, EUR/MWh",
+            "BL 1 - Fixed Missing EUR/MWh",
+            "BL 2 - VWAP Missing EUR/MWh",
             "Res share in BL, %",
             "Overproduction share, %"
         ]].copy()
@@ -444,7 +446,6 @@ elif run_button_manual:
         ]
 
         baseload_cols = [
-            "BL 1 - Fixed Missing EUR/MWh", "BL 2 - VWAP Missing EUR/MWh",
             "Baseload, MWh",
             "Nr of green BL hours, h", "Nr of hours, h"
         ]
