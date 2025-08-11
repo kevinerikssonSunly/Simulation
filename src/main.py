@@ -20,7 +20,7 @@ if __name__ == "__main__":
     battery_4h = 144#input("4h Battery Capacity (MW)")
     battery_6h = 0#input("6h Battery Capacity (MW)")
     battery_8h = 0#input("8h Battery Capacity (MW)")
-    hydro_storage = 0#input("Hydro Storage (MW)")
+    battery_12h = 0#input("12h Battery Capacity (MW)")
 
     run_all_scenarios(wind_profile, solar_profile, baseload)
 '''

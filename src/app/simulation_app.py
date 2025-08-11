@@ -186,10 +186,7 @@ with st.sidebar:
         st.markdown("A 2h BESS with 50 MW can store and release up to 100 MWh total.")
         st.markdown("Input is required for both capacity and cost to include each storage type.")
 
-        st.markdown("**Pumped Hydro, MW** – Power capacity of pumped hydro storage system.")
-        st.markdown("**Pumped Hydro annual payment, EUR** – Fixed yearly cost of the hydro storage system.")
-
-        st.markdown("All BESS systems use 86% round-trip efficiency and Hydro Pump uses 90%.")
+        st.markdown("All BESS systems use 86% round-trip efficiency.")
 with st.sidebar:
     with st.expander("Output field explanations"):
         st.markdown("**Simulation id** – Identifier for the simulation run (can be used to group multiple results).")
@@ -228,7 +225,6 @@ with st.sidebar:
         st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
 
         st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
-        st.markdown("**Hydro avg cycles** – Average daily full cycles for the pumped hydro storage system.")
 
 if simulation_mode == "Manual Input":
     with st.sidebar:
@@ -290,10 +286,10 @@ if simulation_mode == "Manual Input":
 
             col11, col12 = st.columns(2)
             with col11:
-                hydro_storage_mw = st.number_input("Hydro Storage, MW", min_value=0, value=0)
+                battery_12h_mw = st.number_input("BESS 12h Capacity, MW", min_value=0, value=0)
             with col12:
-                hydro_storage_price = st.number_input("Pumped Hydro annual payment, EUR", min_value=0, value=0)
-            validate_pair("Pumped Hydro", hydro_storage_mw, hydro_storage_price)
+                battery_12h_price = st.number_input("BESS 12h annual payment, EUR", min_value=0, value=0)
+            validate_pair("BESS 12h", battery_12h_mw, battery_12h_price)
 
         run_button_manual = st.button("Run Simulation")
 elif simulation_mode == "Upload File (Batch Mode)":
@@ -330,15 +326,14 @@ if run_button_batch:
                 battery_4h_price = row["battery_4h_price"]
                 battery_6h_price = row["battery_6h_price"]
                 battery_8h_price = row["battery_8h_price"]
-                hydro_storage_price = row["hydro_storage_price"]
+                battery_12h_price = row["battery_12h_price"]
                 battery_1h_mw = row["battery_1h_mw"]
                 battery_2h_mw = row["battery_2h_mw"]
                 battery_4h_mw = row["battery_4h_mw"]
                 battery_6h_mw = row["battery_6h_mw"]
                 battery_8h_mw = row["battery_8h_mw"]
-                hydro_storage_mw = row["hydro_storage_mw"]
+                battery_12h_mw = row["battery_12h_mw"]
                 bess_rte = 0.86
-                hydro_rte = 0.9
 
                 wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
 
@@ -356,16 +351,15 @@ if run_button_batch:
                     battery_4h_price=battery_4h_price,
                     battery_6h_price=battery_6h_price,
                     battery_8h_price=battery_8h_price,
-                    hydro_storage_price=hydro_storage_price,
+                    battery_12h_price=battery_12h_price,
                     missing_energy_price=missing_energy_price,
                     battery_1h_mw=battery_1h_mw,
                     battery_2h_mw=battery_2h_mw,
                     battery_4h_mw=battery_4h_mw,
                     battery_6h_mw=battery_6h_mw,
                     battery_8h_mw=battery_8h_mw,
-                    hydro_mw=hydro_storage_mw,
+                    battery_12h_mw=battery_12h_mw,
                     bess_rte=0.86,
-                    hydro_rte=0.9,
                     simulation_id=k
                 )
                 k += 1
@@ -404,16 +398,15 @@ elif run_button_manual:
             battery_4h_price=battery_4h_price,
             battery_6h_price=battery_6h_price,
             battery_8h_price=battery_8h_price,
-            hydro_storage_price=hydro_storage_price,
+            battery_12h_price=battery_12h_price,
             missing_energy_price=missing_energy_price,
             battery_1h_mw=battery_1h_mw,
             battery_2h_mw=battery_2h_mw,
             battery_4h_mw=battery_4h_mw,
             battery_6h_mw=battery_6h_mw,
             battery_8h_mw=battery_8h_mw,
-            hydro_mw=hydro_storage_mw,
-            bess_rte=0.86,
-            hydro_rte=0.9
+            battery_12h_mw=battery_12h_mw,
+            bess_rte=0.86
         )
 
         result_df = pd.DataFrame(results)
@@ -463,13 +456,13 @@ elif run_button_manual:
         battery_cycles = [
             "BESS 1h avg cycles", "BESS 2h avg cycles",
             "BESS 4h avg cycles", "BESS 6h avg cycles",
-            "BESS 8h avg cycles", "Hydro avg cycles"
+            "BESS 8h avg cycles", "BESS 12h avg cycles"
         ]
 
         battery_hours = [
             "BESS 1h zero hours ratio, %", "BESS 2h zero hours ratio, %",
             "BESS 4h zero hours ratio, %", "BESS 6h zero hours ratio, %",
-            "BESS 8h zero hours ratio, %", "Hydro zero hours ratio, %",
+            "BESS 8h zero hours ratio, %", "BESS 12h zero hours ratio, %",
         ]
 
         # Helper to extract, set index, and add average

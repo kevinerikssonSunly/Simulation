@@ -37,16 +37,15 @@ def run_all_scenarios(
         battery_4h_price = 3200000,
         battery_6h_price = 0,
         battery_8h_price = 0,
-        hydro_storage_price = 0,
+        battery_12h_price = 0,
         missing_energy_price = 300,
         battery_1h_mw = 0,
         battery_2h_mw = 0,
         battery_4h_mw = 150,
         battery_6h_mw = 0,
         battery_8h_mw = 0,
-        hydro_mw = 0,
-        bess_rte = 0.86,
-        hydro_rte = 0.9,
+        battery_12h_mw= 0,
+        bess_rte = 0.86
     )
     df = pd.DataFrame(results)
     append_to_excel(df, output_path)

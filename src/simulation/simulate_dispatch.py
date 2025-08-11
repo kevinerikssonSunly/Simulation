@@ -23,16 +23,15 @@ def simulate_dispatch(
     battery_4h_price: float,
     battery_6h_price: float,
     battery_8h_price: float,
-    hydro_storage_price: float,
+    battery_12h_price: float,
     missing_energy_price: float,
     battery_1h_mw: float,
     battery_2h_mw: float,
     battery_4h_mw: float,
     battery_6h_mw: float,
     battery_8h_mw: float,
-    hydro_mw: float,
+    battery_12h_mw: float,
     bess_rte,
-    hydro_rte,
     simulation_id: int = 1,
 ) -> tuple[list[Any], DataFrame]:
     results_by_year = []
@@ -45,26 +44,22 @@ def simulate_dispatch(
         4: battery_4h_mw,
         6: battery_6h_mw,
         8: battery_8h_mw,
-    }
-    hydro_config = {
-        "enabled": hydro_mw > 0,
-        "charge_mw": hydro_mw,
-        "volume_mwh": 2000,
+        12: battery_12h_mw,
     }
 
     df = pd.read_excel(profile_file)
     df.set_index('Hour', inplace=True)
 
-    storages = create_storages(battery_config, hydro_config, bess_rte, hydro_rte)
+    storages = create_storages(battery_config, bess_rte)
 
     for year in years:
         wind_prod_year = wind_prod[wind_prod.index.year == year]
         solar_prod_year = solar_prod[solar_prod.index.year == year]
 
-        metrics = init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price)
+        metrics = init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, battery_12h_price, missing_energy_price)
 
         result, hourly_df = simulate_year_dispatch(metrics, year, wind_prod_year, solar_prod_year, df,
-                                                       storages, baseload, wind_cap, solar_cap, battery_config, hydro_config)
+                                                       storages, baseload, wind_cap, solar_cap, battery_config)
 
         total_storage_cost = sum([
             battery_1h_price,
@@ -72,7 +67,7 @@ def simulate_dispatch(
             battery_4h_price,
             battery_6h_price,
             battery_8h_price,
-            hydro_storage_price
+            battery_12h_price
         ])
 
         excess_energy = result["Excess wind, MWh"] + result["Excess solar, MWh"]
@@ -95,7 +90,7 @@ def simulate_dispatch(
 
         used_storage_names = [s.name for s in storages]
 
-        for storage_name in ["BESS 1h", "BESS 2h", "BESS 4h", "BESS 6h", "BESS 8h", "Hydro"]:
+        for storage_name in ["BESS 1h", "BESS 2h", "BESS 4h", "BESS 6h", "BESS 8h", "BESS 12h"]:
             if storage_name in used_storage_names:
                 storage = next(s for s in storages if s.name == storage_name)
                 yearly_cycles = storage.get_average_cycles_per_year()

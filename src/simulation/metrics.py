@@ -1,7 +1,7 @@
 from typing import Dict
 import pandas as pd
 
-def init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, hydro_storage_price, missing_energy_price) -> Dict[str, float]:
+def init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, battery_12h_price, missing_energy_price) -> Dict[str, float]:
     metrics = {
         "produced_total": 0.0,
         "hours_met": 0,
@@ -24,7 +24,7 @@ def init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, ba
         "battery_4h_price": battery_4h_price,
         "battery_6h_price": battery_6h_price,
         "battery_8h_price": battery_8h_price,
-        "hydro_storage_price": hydro_storage_price,
+        "battery_12h_price": battery_12h_price,
         "missing_energy_price": missing_energy_price,
     }
     return metrics
@@ -40,7 +40,7 @@ def compile_result(
     battery_4h_mw: float,
     battery_6h_mw: float,
     battery_8h_mw: float,
-    hydro_mw: float,
+    battery_12h_mw: float,
     wind_baseload: float,
     solar_baseload: float,
     wind_total: float,
@@ -90,8 +90,8 @@ def compile_result(
         "BESS 6h zero hours ratio, %": "",
         "BESS 8h avg cycles": "",
         "BESS 8h zero hours ratio, %": "",
-        "Hydro avg cycles": "",
-        "Hydro zero hours ratio, %": "",
+        "BESS 12h avg cycles": "",
+        "BESS 12h zero hours ratio, %": "",
 
         "wind_capacity": round(wind_cap),
         "solar_capacity": round(solar_cap),
@@ -100,7 +100,7 @@ def compile_result(
         "BESS_4h_CHARGE_MW": battery_4h_mw,
         "BESS_6h_CHARGE_MW": battery_6h_mw,
         "BESS_8h_CHARGE_MW": battery_8h_mw,
-        "pumped Hydro": hydro_mw,
+        "BESS_12h_CHARGE_MW": battery_12h_mw,
         "Baseload, MW": baseload,
         "Wind PaP price, EUR/MWh": m["wind_price"],
         "PV PaP price, EUR/MWh": m["solar_price"],
@@ -109,6 +109,6 @@ def compile_result(
         "BESS 4h annual payment, EUR/MWh": m["battery_4h_price"],
         "BESS 6h annual payment, EUR/MWh": m["battery_6h_price"],
         "BESS 8h annual payment, EUR/MWh": m["battery_8h_price"],
-        "Pumped Hydro annual payment, EUR/MWh": m["hydro_storage_price"],
+        "BESS 12h annual payment, EUR/MWh": m["battery_12h_price"],
         "Missing energy price, EUR/MWh": m["missing_energy_price"],
     }

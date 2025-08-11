@@ -16,7 +16,6 @@ def simulate_year_dispatch(
     wind_cap: float,
     solar_cap: float,
     battery_config: Dict[int, float],
-    hydro_config: Dict[str, Any]
 ) -> tuple[Dict, pd.DataFrame]:
     total_hours = len(wind_year)
     wind_total = wind_year.sum()
@@ -54,7 +53,7 @@ def simulate_year_dispatch(
         compile_result(
             year, wind_cap, solar_cap, baseload, total_hours,
             battery_config[1], battery_config[2], battery_config[4],
-            battery_config[6], battery_config[8], hydro_config["charge_mw"],
+            battery_config[6], battery_config[8], battery_config[12],
             wind_baseload, solar_baseload, wind_total, solar_total, vwap_missing, vwap_excess, vwap_wind, vwap_solar, metrics
         ),
         hourly_df
@@ -76,17 +75,14 @@ def sequential_bess_charging(storages, wind_surplus, solar_surplus):
     total_charged = 0.0
 
     for storage in storages:
-        # Available headroom (in MWh)
         soc_headroom = max(0.0, storage.max_volume - storage.soc)
         if soc_headroom < 1e-6:
-            continue  # This BESS is full
+            continue
 
-        # BESS can only accept up to its MW rating per hour, and not more than headroom or surplus
         slice_mwh = min(storage.max_charge, soc_headroom, remaining_wind + remaining_solar)
         if slice_mwh < 1e-6:
             continue
 
-        # Allocate slice in wind/solar proportion
         total_surplus = remaining_wind + remaining_solar
         wind_frac = remaining_wind / total_surplus if total_surplus > 0 else 0.0
         solar_frac = 1.0 - wind_frac
@@ -94,10 +90,8 @@ def sequential_bess_charging(storages, wind_surplus, solar_surplus):
         slice_wind = slice_mwh * wind_frac
         slice_solar = slice_mwh * solar_frac
 
-        # Charge storage, get actual charged and leftovers
         charged, leftover_wind, leftover_solar, loss = storage.charge(slice_wind, slice_solar)
 
-        # Update remaining surplus: only subtract what was actually charged
         actual_charged_wind = slice_wind - leftover_wind
         actual_charged_solar = slice_solar - leftover_solar
 
@@ -107,7 +101,6 @@ def sequential_bess_charging(storages, wind_surplus, solar_surplus):
         total_charged += actual_charged_wind + actual_charged_solar
         total_cycle_loss += max(0.0, loss)
 
-        # If we run out of surplus, break
         if remaining_wind + remaining_solar < 1e-6:
             break
 
