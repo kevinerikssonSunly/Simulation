@@ -411,7 +411,6 @@ elif run_button_manual:
 
         result_df = pd.DataFrame(results)
         st.success("✅ Simulation complete!")
-
         kpi_df = result_df[[
             "year",
             "Break-even 1 - Fixed Missing, EUR/MWh",
