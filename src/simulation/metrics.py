@@ -59,6 +59,7 @@ def compile_result(
         "BL 2 - VWAP Missing EUR/MWh": "",
         "Break-even 1 - Fixed Missing, EUR/MWh": "",
         "Break-even 2 - VWAP Missing, EUR/MWh": "",
+        "Break-even 3 - Excess En. Price Fixed 0, EUR/MWh": "",
         "Overproduction share, %": "",
         "Annual avg spot, EUR/MWh": "",
         "Res share in BL, %": round((m["produced_total"] / expected_baseload) * 100) if expected_baseload > 0 and pd.notna(

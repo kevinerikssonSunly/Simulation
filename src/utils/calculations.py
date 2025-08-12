@@ -1,5 +1,7 @@
 import pandas as pd
 
+from constraints import EXCESS_ENERGY_PRICE_FIXED
+
 
 def vwap_energy(df: pd.DataFrame, energy_col: str, price_col: str) -> float:
     filtered = df.dropna(subset=[energy_col, price_col])
@@ -26,6 +28,10 @@ def calculate_break_even_price_1(total_wind, wind_PaP, total_pv, pv_PaP, bess_an
 
 def calculate_break_even_price_2(total_wind, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_energy, excess_energy_vwap, missing_energy, missing_energy_vwap, baseload):
     baseload_price = ((total_wind * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_energy * excess_energy_vwap) + (missing_energy * missing_energy_vwap)) / baseload
+    return baseload_price
+
+def calculate_break_even_price_3(total_wind, wind_PaP, total_pv, pv_PaP, bess_annual_payments, excess_energy,  missing_energy, missing_energy_price, baseload):
+    baseload_price = ((total_wind * wind_PaP) + (total_pv * pv_PaP) + bess_annual_payments - (excess_energy * EXCESS_ENERGY_PRICE_FIXED) + (missing_energy * missing_energy_price)) / baseload
     return baseload_price
 
 def calculate_bl_price_1(wind_in_baseload, wind_PaP, solar_in_baseload, pv_PaP, bess_annual_payments, missing_energy, missing_energy_vwap, baseload):
