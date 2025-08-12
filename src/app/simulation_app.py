@@ -417,7 +417,6 @@ elif run_button_manual:
             "year",
             "Break-even 1 - Fixed Missing, EUR/MWh",
             "Break-even 2 - VWAP Missing, EUR/MWh",
-            "Break-even 3 - Fixed Excess, EUR/MWh",
             "BL 1 - Fixed Missing EUR/MWh",
             "BL 2 - VWAP Missing EUR/MWh",
             "Res share in BL, %",
