@@ -246,14 +246,8 @@ if simulation_mode == "Manual Input":
 
         col5, col6 = st.columns(2)
         with col5:
-            solar_excess_energy_price = st.number_input("PV Excess Energy Price, EUR/MWh", min_value=0, value=0)
-        with col6:
-            wind_excess_energy_price = st.number_input("Wind Excess Energy Price, EUR/MWh", min_value=0, value=0)
-
-        col7, col8 = st.columns(2)
-        with col7:
             baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
-        with col8:
+        with col6:
             missing_energy_price = st.number_input("Missing Energy Price, EUR/MWh", min_value=0, value=0)
 
         with st.expander("Battery Storage Settings"):
@@ -328,8 +322,6 @@ if run_button_batch:
                 baseload = row["baseload"]
                 wind_price = row["wind_price"]
                 solar_price = row["solar_price"]
-                solar_excess_energy_price = row["solar_excess_energy_price"]
-                wind_excess_energy_price = row["wind_excess_energy_price"]
                 missing_energy_price = row["missing_energy_price"]
                 battery_1h_price = row["battery_1h_price"]
                 battery_2h_price = row["battery_2h_price"]
@@ -356,8 +348,6 @@ if run_button_batch:
                     solar_cap=solar_cap,
                     wind_price=wind_price,
                     solar_price=solar_price,
-                    wind_excess_energy_price=wind_excess_energy_price,
-                    solar_excess_energy_price=solar_excess_energy_price,
                     battery_1h_price=battery_1h_price,
                     battery_2h_price=battery_2h_price,
                     battery_4h_price=battery_4h_price,
@@ -405,8 +395,6 @@ elif run_button_manual:
             solar_cap=solar_cap,
             wind_price=wind_price,
             solar_price=solar_price,
-            wind_excess_energy_price=wind_excess_energy_price,
-            solar_excess_energy_price=solar_excess_energy_price,
             battery_1h_price=battery_1h_price,
             battery_2h_price=battery_2h_price,
             battery_4h_price=battery_4h_price,
