@@ -201,7 +201,7 @@ with st.sidebar:
 
         st.markdown("**Break-even 1 - Fixed Missing, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback (excess energy VWAP), and missing energy cost (fixed price).")
         st.markdown("**Break-even 2 - VWAP Missing, EUR/MWh** – Same as Break-even 1, but uses VWAP for missing energy pricing.")
-        st.markdown("**Break-even 3 - Fixed Missing, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback (excess energy fixed price), and missing energy cost (fixed price).")
+        st.markdown("**Break-even 3 - Excess En. Price Fixed 0, EUR/MWh** – Required price to break even based on production, storage cost, wind and solar sellback (excess energy fixed price atm. 0), and missing energy cost (fixed price).")
 
 
         st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
