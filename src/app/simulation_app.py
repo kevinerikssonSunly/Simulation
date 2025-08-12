@@ -178,6 +178,8 @@ with st.sidebar:
 
         st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
 
+
+
         st.markdown("---")
         st.markdown("### Battery Storage Settings")
 
@@ -234,24 +236,30 @@ if simulation_mode == "Manual Input":
         with col1:
             wind_cap = st.number_input("Wind Capacity, MW", min_value=0, value=0)
         with col2:
-            wind_price = st.number_input("Wind PaP price EUR/MWh", min_value=0, value=0)
+            wind_price = st.number_input("Wind PaP Price, EUR/MWh", min_value=0, value=0)
 
         col3, col4 = st.columns(2)
         with col3:
-            solar_cap = st.number_input("Solar Capacity, MW", min_value=0, value=0)
+            solar_cap = st.number_input("PV Capacity, MW", min_value=0, value=0)
         with col4:
-            solar_price = st.number_input("PV PaP price EUR/MWh", min_value=0, value=0)
+            solar_price = st.number_input("PV PaP Price, EUR/MWh", min_value=0, value=0)
 
         col5, col6 = st.columns(2)
         with col5:
-            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
+            solar_excess_energy_price = st.number_input("PV Excess Energy Price, EUR/MWh", min_value=0, value=0)
         with col6:
-            missing_energy_price = st.number_input("Missing Energy Price EUR/MWh", min_value=0, value=0)
+            wind_excess_energy_price = st.number_input("Wind Excess Energy Price, EUR/MWh", min_value=0, value=0)
+
+        col7, col8 = st.columns(2)
+        with col7:
+            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
+        with col8:
+            missing_energy_price = st.number_input("Missing Energy Price, EUR/MWh", min_value=0, value=0)
 
         with st.expander("Battery Storage Settings"):
             col1, col2 = st.columns(2)
             with col1:
-                battery_1h_mw = st.number_input("1h Battery Capacity MW", min_value=0, value=0)
+                battery_1h_mw = st.number_input("1h Battery Capacity, MW", min_value=0, value=0)
             with col2:
                 battery_1h_price = st.number_input("BESS 1h annual payment, EUR", min_value=0, value=0)
             validate_pair("BESS 1h", battery_1h_mw, battery_1h_price)
@@ -320,6 +328,8 @@ if run_button_batch:
                 baseload = row["baseload"]
                 wind_price = row["wind_price"]
                 solar_price = row["solar_price"]
+                solar_excess_energy_price = row["solar_excess_energy_price"]
+                wind_excess_energy_price = row["wind_excess_energy_price"]
                 missing_energy_price = row["missing_energy_price"]
                 battery_1h_price = row["battery_1h_price"]
                 battery_2h_price = row["battery_2h_price"]
@@ -346,6 +356,8 @@ if run_button_batch:
                     solar_cap=solar_cap,
                     wind_price=wind_price,
                     solar_price=solar_price,
+                    wind_excess_energy_price=wind_excess_energy_price,
+                    solar_excess_energy_price=solar_excess_energy_price,
                     battery_1h_price=battery_1h_price,
                     battery_2h_price=battery_2h_price,
                     battery_4h_price=battery_4h_price,
@@ -393,6 +405,8 @@ elif run_button_manual:
             solar_cap=solar_cap,
             wind_price=wind_price,
             solar_price=solar_price,
+            wind_excess_energy_price=wind_excess_energy_price,
+            solar_excess_energy_price=solar_excess_energy_price,
             battery_1h_price=battery_1h_price,
             battery_2h_price=battery_2h_price,
             battery_4h_price=battery_4h_price,
@@ -415,6 +429,7 @@ elif run_button_manual:
             "year",
             "Break-even 1 - Fixed Missing, EUR/MWh",
             "Break-even 2 - VWAP Missing, EUR/MWh",
+            "Break-even 3 - Fixed Excess, EUR/MWh",
             "BL 1 - Fixed Missing EUR/MWh",
             "BL 2 - VWAP Missing EUR/MWh",
             "Res share in BL, %",
