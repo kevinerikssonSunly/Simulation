@@ -428,7 +428,6 @@ elif run_button_manual:
 
         st.subheader("Key Results")
 
-
         st.dataframe(kpi_df)
 
         # Define groups
