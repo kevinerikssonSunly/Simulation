@@ -36,6 +36,8 @@ def calculate_bl_price_2(wind_in_baseload, wind_PaP, solar_in_baseload, pv_PaP, 
     baseload_price = ((wind_in_baseload * wind_PaP) + (solar_in_baseload * pv_PaP) + bess_annual_payments + (missing_energy * missing_energy_price)) / baseload
     return baseload_price
 
-def calculate_overproduction_share(excess_energy, total_wind, total_pv):
-    prod_energy = total_wind + total_pv
-    return round((excess_energy) / prod_energy * 100, 2)
+def calculate_overproduction_share(excess_energy, wind_sum, solar_sum):
+    total_prod = wind_sum + solar_sum
+    if total_prod == 0 or pd.isna(total_prod):
+        return 0  # or np.nan, depending on what makes sense
+    return (excess_energy / total_prod) * 100

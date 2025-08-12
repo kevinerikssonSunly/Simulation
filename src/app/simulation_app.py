@@ -286,7 +286,7 @@ if simulation_mode == "Manual Input":
 
             col11, col12 = st.columns(2)
             with col11:
-                battery_12h_mw = st.number_input("BESS 12h Capacity, MW", min_value=0, value=0)
+                battery_12h_mw = st.number_input("12h Battery Capacity, MW", min_value=0, value=0)
             with col12:
                 battery_12h_price = st.number_input("BESS 12h annual payment, EUR", min_value=0, value=0)
             validate_pair("BESS 12h", battery_12h_mw, battery_12h_price)

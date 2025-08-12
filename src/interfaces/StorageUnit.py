@@ -4,6 +4,9 @@ import pandas as pd
 
 
 class StorageUnit(ABC):
+    def __init__(self):
+        self.name = None
+
     @abstractmethod
     def charge(self, wind: float, solar: float) -> tuple[float, float, float, float]:
         """Returns: charged_energy, redundant_wind, redundant_solar, cycle_loss"""

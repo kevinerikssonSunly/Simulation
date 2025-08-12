@@ -88,20 +88,36 @@ def simulate_dispatch(
         results_by_year.append(result)
         all_hourly_dfs.append(hourly_df)
 
-        used_storage_names = [s.name for s in storages]
+        total_hours = len(wind_prod_year)
+        hours_per_day = 24
 
         for storage_name in ["BESS 1h", "BESS 2h", "BESS 4h", "BESS 6h", "BESS 8h", "BESS 12h"]:
-            if storage_name in used_storage_names:
-                storage = next(s for s in storages if s.name == storage_name)
-                yearly_cycles = storage.get_average_cycles_per_year()
-                avg_daily_cycles = yearly_cycles / (len(wind_prod_year) / 24)
-                result[f"{storage.name} avg cycles"] = round(avg_daily_cycles, 2)
-                result[f"{storage.name} zero hours ratio, %"] = round(storage.get_zero_hours() / len(wind_prod_year) * 100)
-                storage.reset_yearly_energy()
-                storage.reset_yearly_zero_hours()
-            else:
+            storage = next((s for s in storages if s.name == storage_name), None)
+
+            # If this BESS wasn't instantiated (or has no power), report as unused: 0 cycles, 100% zero-hours
+            if storage is None or getattr(storage, "max_charge", 0) <= 0:
                 result[f"{storage_name} avg cycles"] = 0.0
-                result[f"{storage_name} zero hours ratio, %"] = 0.0
+                result[f"{storage_name} zero hours ratio, %"] = 100.0
+                continue
+
+            # Determine if it actually did any work this year
+            yearly_energy = getattr(storage, "get_yearly_energy", lambda: 0.0)()
+            yearly_cycles = storage.get_average_cycles_per_year()
+
+            if (yearly_energy or 0.0) <= 0 and (yearly_cycles or 0.0) <= 0:
+                # existed but never used
+                result[f"{storage_name} avg cycles"] = 0.0
+                result[f"{storage_name} zero hours ratio, %"] = 100.0
+            else:
+                avg_daily_cycles = yearly_cycles / (total_hours / hours_per_day)
+                zero_hours_ratio = (storage.get_zero_hours() / total_hours) * 100
+                result[f"{storage_name} avg cycles"] = round(avg_daily_cycles, 2)
+                result[f"{storage_name} zero hours ratio, %"] = round(zero_hours_ratio)
+
+        # Only reset after reading metrics
+        for s in storages:
+            if hasattr(s, "reset_yearly_energy"): s.reset_yearly_energy()
+            if hasattr(s, "reset_yearly_zero_hours"): s.reset_yearly_zero_hours()
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 
