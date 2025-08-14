@@ -88,7 +88,6 @@ def simulate_dispatch(
                 result["Missing energy, MWh"], missing_energy_price,
                 baseload * len(wind_prod_year)
             )
-
             brake_even_2 = calculate_break_even_price_2(
                 wind_prod_year.sum(), wind_price,
                 solar_prod_year.sum(), solar_price,
