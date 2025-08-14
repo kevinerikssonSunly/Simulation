@@ -22,6 +22,15 @@ st.set_page_config(page_title="Sunly Baseload Simulator", layout="wide")
 
 st.title("Sunly Baseload Simulation App")
 
+st.sidebar.subheader("Download Documentation")
+st.download_button(
+                label="📥 Download Simulator Documentation",
+                file_name="Sunly Baseload App - Documentation.pdf",
+                mime="application/pdf",
+                data=f.read()
+            )
+
+
 st.sidebar.header("Simulation Settings")
 
 run_button_manual = False
