@@ -76,9 +76,40 @@ def simulate_dispatch(
         bl_price_1 = calculate_bl_price_1(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"], solar_price, total_storage_cost, result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year) )
         bl_price_2 = calculate_bl_price_2(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"], solar_price, total_storage_cost, result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year) )
 
-        brake_even_1 = calculate_break_even_price_1(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, excess_energy, result["Excess energy VWAP, EUR/MWh"], result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year))
-        brake_even_2 = calculate_break_even_price_2(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, excess_energy, result["Excess energy VWAP, EUR/MWh"], result["Missing energy, MWh"], result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year))
-        brake_even_3 = calculate_break_even_price_3(wind_prod_year.sum(), wind_price, solar_prod_year.sum(), solar_price, total_storage_cost, excess_energy, result["Missing energy, MWh"], missing_energy_price, baseload * len(wind_prod_year))
+        try:
+            if baseload == 0:
+                raise ValueError("Baseload cannot be zero for break-even calculation.")
+
+            brake_even_1 = calculate_break_even_price_1(
+                wind_prod_year.sum(), wind_price,
+                solar_prod_year.sum(), solar_price,
+                total_storage_cost, excess_energy,
+                result["Excess energy VWAP, EUR/MWh"],
+                result["Missing energy, MWh"], missing_energy_price,
+                baseload * len(wind_prod_year)
+            )
+
+            brake_even_2 = calculate_break_even_price_2(
+                wind_prod_year.sum(), wind_price,
+                solar_prod_year.sum(), solar_price,
+                total_storage_cost, excess_energy,
+                result["Excess energy VWAP, EUR/MWh"],
+                result["Missing energy, MWh"],
+                result["Missing energy VWAP, EUR/MWh"],
+                baseload * len(wind_prod_year)
+            )
+
+            brake_even_3 = calculate_break_even_price_3(
+                wind_prod_year.sum(), wind_price,
+                solar_prod_year.sum(), solar_price,
+                total_storage_cost, excess_energy,
+                result["Missing energy, MWh"], missing_energy_price,
+                baseload * len(wind_prod_year)
+            )
+
+        except ValueError as e:
+            print(f"Skipping break-even calculation: {e}")
+            brake_even_1 = brake_even_2 = brake_even_3 = None
         result["BL 1 - Fixed Missing EUR/MWh"] = round(bl_price_1)
         result["BL 2 - VWAP Missing EUR/MWh"] = round(bl_price_2)
         result["Break-even 1 - Fixed Missing, EUR/MWh"] = round(brake_even_1)
