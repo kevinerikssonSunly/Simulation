@@ -26,9 +26,9 @@ st.sidebar.subheader("Download Documentation")
 with st.sidebar:
     with open(SIMULATION_INPUT, "rb") as f:
         st.download_button(
-            label="📥 Download Simulation Input Template",
-            file_name="simulation_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            label="📥 Download Simulation Documentation",
+            file_name="Sunly Baseload App - Documentation.pdf",
+            mime="application/pdf",
             data=f.read()
         )
 
