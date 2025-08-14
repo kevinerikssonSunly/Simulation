@@ -15,7 +15,7 @@ if SRC_DIR not in sys.path:
 
 from simulation.simulate_dispatch import simulate_dispatch
 from utils.data_prep import extract_from_file
-from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT, SIMULATION_INPUT
+from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT, SIMULATION_INPUT, DOCUMENTATION
 from utils.profiles import get_profiles
 
 st.set_page_config(page_title="Sunly Baseload Simulator", layout="wide")
@@ -24,7 +24,7 @@ st.title("Sunly Baseload Simulation App")
 
 st.sidebar.subheader("Download Documentation")
 with st.sidebar:
-    with open(SIMULATION_INPUT, "rb") as f:
+    with open(DOCUMENTATION, "rb") as f:
         st.download_button(
             label="📥 Download Simulation Documentation",
             file_name="Sunly Baseload App - Documentation.pdf",
