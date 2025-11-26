@@ -32,10 +32,7 @@ def simulate_year_dispatch(
         spot = spot_prices.loc[timestamp, "spot"]
         consumption = spot_prices.loc[timestamp, "cnp"]
 
-        if not baseload_curve:
-            curve = consumption
-        else:
-            curve = baseload
+        curve = consumption
         result, cycle_loss = simulate_hour(wind, solar, storages, curve, timestamp, metrics)
         result["timestamp"] = timestamp
         result["Spot"] = spot
