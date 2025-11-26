@@ -50,6 +50,11 @@ simulation_mode = st.sidebar.radio(
     ["Manual Input", "Upload File (Batch Mode)"]
 )
 
+consumption_curve = st.sidebar.radio(
+    "Select Curve",
+    ["Baseload", "Consumption Curve"]
+)
+
 profile_type = st.sidebar.radio("Select country", list(profile_files.keys()))
 profile_file = profile_files[profile_type]
 
@@ -75,6 +80,9 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
     return summary
 def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
+
+    baseload_curve = True
+
     df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged"]].fillna(0)
     df_plot["baseload"] = baseload_value
 
@@ -306,6 +314,9 @@ if simulation_mode == "Manual Input":
                 battery_12h_price = st.number_input("BESS 12h annual payment, EUR", min_value=0, value=0)
             validate_pair("BESS 12h", battery_12h_mw, battery_12h_price)
 
+            if consumption_curve == "Consumption Curve":
+                baseload_curve = False
+
         run_button_manual = st.button("Run Simulation")
 elif simulation_mode == "Upload File (Batch Mode)":
     with st.sidebar:
@@ -375,7 +386,8 @@ if run_button_batch:
                     battery_8h_mw=battery_8h_mw,
                     battery_12h_mw=battery_12h_mw,
                     bess_rte=0.86,
-                    simulation_id=k
+                    simulation_id=k,
+                    baseload_curve=baseload_curve
                 )
                 k += 1
                 all_results.extend(results)

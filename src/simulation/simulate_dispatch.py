@@ -33,6 +33,7 @@ def simulate_dispatch(
     battery_8h_mw: float,
     battery_12h_mw: float,
     bess_rte,
+    baseload_curve: bool,
     simulation_id: int = 1,
 ) -> tuple[list[Any], DataFrame]:
     results_by_year = []
@@ -60,7 +61,7 @@ def simulate_dispatch(
         metrics = init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, battery_12h_price, missing_energy_price)
 
         result, hourly_df = simulate_year_dispatch(metrics, year, wind_prod_year, solar_prod_year, df,
-                                                       storages, baseload, wind_cap, solar_cap, battery_config)
+                                                       storages, baseload, wind_cap, solar_cap, baseload_curve, battery_config)
 
         total_storage_cost = sum([
             battery_1h_price,

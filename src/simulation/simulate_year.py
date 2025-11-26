@@ -15,6 +15,7 @@ def simulate_year_dispatch(
     baseload: float,
     wind_cap: float,
     solar_cap: float,
+    baseload_curve: bool,
     battery_config: Dict[int, float],
 ) -> tuple[Dict, pd.DataFrame]:
     total_hours = len(wind_year)
@@ -29,8 +30,13 @@ def simulate_year_dispatch(
         solar = round(solar_year.iloc[hour], 3)
         timestamp = wind_year.index[hour]
         spot = spot_prices.loc[timestamp, "spot"]
+        consumption = spot_prices.loc[timestamp, "cnp"]
 
-        result, cycle_loss = simulate_hour(wind, solar, storages, baseload, timestamp, metrics)
+        if not baseload_curve:
+            curve = consumption
+        else:
+            curve = baseload
+        result, cycle_loss = simulate_hour(wind, solar, storages, curve, timestamp, metrics)
         result["timestamp"] = timestamp
         result["Spot"] = spot
 
