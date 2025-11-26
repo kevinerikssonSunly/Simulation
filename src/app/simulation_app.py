@@ -433,7 +433,8 @@ elif run_button_manual:
             battery_6h_mw=battery_6h_mw,
             battery_8h_mw=battery_8h_mw,
             battery_12h_mw=battery_12h_mw,
-            bess_rte=0.86
+            bess_rte=0.86,
+            baseload_curve=baseload_curve
         )
 
         result_df = pd.DataFrame(results)
