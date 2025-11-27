@@ -7,9 +7,6 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 import altair as alt
-
-from simulation.graphs import energy_stack
-
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
