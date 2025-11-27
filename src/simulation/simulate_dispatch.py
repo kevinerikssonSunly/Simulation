@@ -1,6 +1,7 @@
 from typing import Any
 
 import pandas as pd
+from openpyxl.utils.datetime import to_excel
 from pandas import DataFrame
 
 from simulation.metrics import init_metrics
@@ -152,5 +153,6 @@ def simulate_dispatch(
             if hasattr(s, "reset_yearly_zero_hours"): s.reset_yearly_zero_hours()
 
     full_hourly_df = pd.concat(all_hourly_dfs)
+    full_hourly_df.to_excel("/Users/kevineriksson/Desktop/output.xlsx", index=False)
 
     return results_by_year, full_hourly_df

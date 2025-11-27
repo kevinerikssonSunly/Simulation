@@ -1,5 +1,6 @@
 from typing import Dict, Any, List
 import pandas as pd
+from seaborn import husl_palette
 
 from interfaces.StorageUnit import StorageUnit
 from simulation.metrics import compile_result
@@ -52,6 +53,7 @@ def simulate_year_dispatch(
     wind_baseload = metrics["wind_in_baseload"]
     solar_baseload = metrics["solar_in_baseload"]
     hourly_df["produced_energy"] = hourly_df["wind_total"] + hourly_df["solar_total"]
+
 
     return (
         compile_result(

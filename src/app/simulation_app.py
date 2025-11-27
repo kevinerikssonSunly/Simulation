@@ -82,7 +82,7 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
 def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
 
-    df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged"]].fillna(0)
+    df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged", "Consumption"]].fillna(0)
     df_plot["baseload"] = df_plot["Consumption"]
 
     df_plot["direct_to_bl"] = np.minimum(df_plot["produced_energy"], df_plot["baseload"])
@@ -498,7 +498,6 @@ elif run_button_manual:
             block.set_index("year", inplace=True)
             block.loc["Average"] = block.mean()
             return block.round(2)
-
 
         prod_df = format_summary_block(result_df, production_cols)
         base_df = format_summary_block(result_df, baseload_cols)

@@ -6,7 +6,7 @@ import altair as alt
 def plot_energy_stack_st_altair(df, baseload_value):
     df_plot = df.copy()
 
-    df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged"]].fillna(0)
+    df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged", "Consumption"]].fillna(0)
     df_plot["baseload"] = df_plot["Consumption"]
 
     df_plot["direct_to_bl"] = np.minimum(df_plot["produced_energy"], df_plot["baseload"])
