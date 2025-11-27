@@ -36,6 +36,7 @@ def simulate_year_dispatch(
         result, cycle_loss = simulate_hour(wind, solar, storages, curve, timestamp, metrics)
         result["timestamp"] = timestamp
         result["Spot"] = spot
+        result["Consumption"] = curve
 
         hourly_records.append(result)
         cycle_loss_total += cycle_loss
