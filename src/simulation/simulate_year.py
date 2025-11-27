@@ -54,7 +54,7 @@ def simulate_year_dispatch(
 
     return (
         compile_result(
-            year, wind_cap, solar_cap, baseload, total_hours,
+            year, wind_cap, solar_cap, curve, total_hours,
             battery_config[1], battery_config[2], battery_config[4],
             battery_config[6], battery_config[8], battery_config[12],
             wind_baseload, solar_baseload, wind_total, solar_total, vwap_missing, vwap_excess, vwap_wind, vwap_solar, metrics
@@ -177,7 +177,6 @@ def simulate_hour(
             cycle_loss_total += loss
             shortfall -= discharged
 
-
         produced = total_gen + discharged_total
         metrics["produced_total"] += produced
         metrics["wind_in_baseload"] += wind_discharged
@@ -196,4 +195,5 @@ def simulate_hour(
         "excess_energy": excess_energy,
         "wind_total": wind,
         "solar_total": solar,
+        "curve": baseload
     }, cycle_loss_total
