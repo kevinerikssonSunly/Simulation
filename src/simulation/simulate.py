@@ -22,7 +22,7 @@ def run_all_scenarios(
     print(f"\nRunning simulation for {baseload} MW baseload...")
 
     wind_prod, solar_prod = get_profiles(44, 183, profiles)
-
+    baseload_curve = True
     results, hourly_df = simulate_dispatch(
         profile_file=profiles,
         wind_prod = wind_prod,
@@ -45,6 +45,7 @@ def run_all_scenarios(
         battery_6h_mw = 0,
         battery_8h_mw = 0,
         battery_12h_mw= 0,
+        baseload_curve=baseload_curve,
         bess_rte = 0.86
     )
     df = pd.DataFrame(results)

@@ -25,5 +25,4 @@ PV_WIND_PROD_PL = DATA_DIR / "PV_WIND_PROD_PL.xlsx"
 
 SIMULATION_INPUT = DATA_DIR / "simulation_input.xlsx"
 DOCUMENTATION = DATA_DIR / "Sunly Baseload App - Documentation.pdf"
-
 test = DATA_DIR / "test.xlsx"
