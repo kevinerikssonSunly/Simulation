@@ -18,16 +18,16 @@ from utils.data_prep import extract_from_file
 from config import PROFILES_EE, PROFILES_LV, PROFILES_PL, PROFILES_LT, SIMULATION_INPUT, DOCUMENTATION
 from utils.profiles import get_profiles
 
-st.set_page_config(page_title="Sunly Baseload Simulator", layout="wide")
+st.set_page_config(page_title="Sunly Demand Simulator", layout="wide")
 
-st.title("Sunly Baseload Simulation App")
+st.title("Sunly Demand Simulation App")
 
 st.sidebar.subheader("Download Documentation")
 with st.sidebar:
     with open(DOCUMENTATION, "rb") as f:
         st.download_button(
             label="📥 Download Simulation Documentation",
-            file_name="Sunly Baseload App - Documentation.pdf",
+            file_name="Sunly demand App - Documentation.pdf",
             mime="application/pdf",
             data=f.read()
         )
@@ -150,7 +150,7 @@ def plot_energy_stack_st_altair(df):
     ).interactive()
 
     # Legend
-    st.markdown("**Daily Energy Supply vs Baseload**")
+    st.markdown("**Daily Energy Supply vs demand**")
 
     st.markdown("""
     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
@@ -188,9 +188,9 @@ with st.sidebar:
         st.markdown("**Solar Capacity, MW** – Installed solar (PV) generation capacity.")
         st.markdown("**PV PaP price, EUR/MWh** – Contract price for solar energy (Pay-as-Produced).")
 
-        st.markdown(f"**Target Baseload, MW** – Minimum constant power output target.")
+        st.markdown(f"**Target demand, MW** – Minimum constant power output target.")
 
-        st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet baseload demand.")
+        st.markdown("**Missing Energy Price EUR/MWh** – Penalty or replacement cost for unmet demand demand.")
 
 
 
@@ -209,7 +209,7 @@ with st.sidebar:
         st.markdown("**Year** – Simulation year this result corresponds to.")
 
         st.markdown(
-            "**BL 1 - Fixed Missing, EUR/MWh** – Effective cost of delivered baseload, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
+            "**Demand 1 - Fixed Missing, EUR/MWh** – Effective cost of delivered demand, including storage and missing energy valued at VWAP (Volume Weighted Average Price).")
         st.markdown(
             "**BL 2 - VWAP Missing, EUR/MWh** – Same as BL 1 but missing energy priced at a fixed penalty value instead of VWAP (Volume Weighted Average Price).")
 
@@ -219,28 +219,28 @@ with st.sidebar:
 
 
         st.markdown("**Annual avg spot, EUR/MWh** – Average day-ahead market price over the simulation year.")
-        st.markdown("**Res share in BL, %** – Share of baseload met by renewable energy (wind + solar + storage) as a percentage.")
-        st.markdown("**Nr of green BL hours, h** – Number of hours when baseload demand was fully met.")
+        st.markdown("**Res share in BL, %** – Share of demand met by renewable energy (wind + solar + storage) as a percentage.")
+        st.markdown("**Nr of green BL hours, h** – Number of hours when demand demand was fully met.")
         st.markdown("**Nr of hours, h** – Total number of hours in the simulated year.")
 
         st.markdown("**Wind cap price, EUR/MWh** – VWAP (volume-weighted average price) of wind energy sent to the grid.")
         st.markdown("**PV cap price, EUR/MWh** – VWAP of solar (PV) energy sent to the grid.")
-        st.markdown("**Missing energy VWAP, EUR/MWh** – Average spot price at which baseload shortfalls (missing energy) occurred.")
+        st.markdown("**Missing energy VWAP, EUR/MWh** – Average spot price at which demand shortfalls (missing energy) occurred.")
         st.markdown("**Excess energy VWAP, EUR/MWh** – Average spot price for energy overproduced and exported to the grid.")
 
-        st.markdown("**Baseload, MWh** – Total annual energy demand as determined by the baseload level (in MWh).")
+        st.markdown("**Demand, MWh** – Total annual energy demand as determined by the demand level (in MWh).")
         st.markdown("**Overproduction share, %** – Share of produced energy (wind + solar) that was either curtailed or not used due to storage/grid limits.")
 
-        st.markdown("**Missing energy, MWh** – Total MWh of energy that was needed to meet baseload but could not be delivered.")
+        st.markdown("**Missing energy, MWh** – Total MWh of energy that was needed to meet demand but could not be delivered.")
         st.markdown("**Cycle loss, MWh** – Cumulative round-trip losses due to inefficiencies in charging/discharging storage systems.")
 
         st.markdown("**Wind prod, MWh** – Total annual energy produced by wind farms.")
         st.markdown("**Solar prod, MWh** – Total annual energy produced by solar panels.")
-        st.markdown("**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet baseload.")
+        st.markdown("**Wind in BL, MWh** – Wind energy that was directly or indirectly (via storage) used to meet demand.")
         st.markdown("**Solar in BL, MWh** – Same as above, but for solar energy.")
 
-        st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond baseload needs.")
-        st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond baseload needs.")
+        st.markdown("**Excess wind, MWh** – Wind energy that was exported to the grid beyond demand needs.")
+        st.markdown("**Excess solar, MWh** – Solar energy exported to the grid beyond demand needs.")
 
         st.markdown("**BESS Xh avg cycles** – Average daily full equivalent discharge cycles for the X-hour battery system.")
 
@@ -262,7 +262,7 @@ if simulation_mode == "Manual Input":
 
         col5, col6 = st.columns(2)
         with col5:
-            baseload = st.number_input(f"Target Baseload MW, Min 1 MW", min_value=1, value=1)
+            baseload = st.number_input(f"Target demand MW, Min 1 MW", min_value=1, value=1)
         with col6:
             missing_energy_price = st.number_input("Missing Energy Price, EUR/MWh", min_value=0, value=0)
 
@@ -458,7 +458,7 @@ elif run_button_manual:
         ]
 
         baseload_cols = [
-            "Baseload, MWh",
+            "demand, MWh",
             "Nr of green BL hours, h", "Nr of hours, h"
         ]
 
@@ -511,7 +511,7 @@ elif run_button_manual:
             st.dataframe(prod_df)
 
         with col2:
-            st.markdown("**Baseload & Gaps**")
+            st.markdown("**demand & Gaps**")
             st.dataframe(base_df)
 
         col3, col4= st.columns(2)
