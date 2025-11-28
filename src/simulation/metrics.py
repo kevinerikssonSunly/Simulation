@@ -70,7 +70,7 @@ def compile_result(
         "PV cap price, EUR/MWh": round(vwap_solar),
         "Missing energy VWAP, EUR/MWh": round(vwap_missing),
         "Excess energy VWAP, EUR/MWh": round(vwap_excess),
-        "Baseload, MWh": expected_baseload,
+        "Demand, MWh": expected_baseload,
         "Missing energy, MWh": round(0 if pd.isna(m["missing_energy"]) else m["missing_energy"]),
         "Cycle loss, MWh": round(m["cycle_loss_total"]),
         "Wind prod, MWh": round(wind_total),

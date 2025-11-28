@@ -458,7 +458,7 @@ elif run_button_manual:
         ]
 
         baseload_cols = [
-            "demand, MWh",
+            "Demand, MWh",
             "Nr of green BL hours, h", "Nr of hours, h"
         ]
 
