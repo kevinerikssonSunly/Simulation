@@ -21,7 +21,7 @@ def simulate_year_dispatch(
     battery_config: Dict[int, float],
 ) -> tuple[Dict, pd.DataFrame]:
     total_hours = len(wind_year)
-    cnp_avg = np.sum(df["cnp"], axis=0) / total_hours
+    cnp_avg = df.loc[wind_year.index, "cnp"].mean()
     wind_total = wind_year.sum()
     solar_total = solar_year.sum()
 

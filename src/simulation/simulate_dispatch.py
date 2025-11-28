@@ -153,4 +153,6 @@ def simulate_dispatch(
 
     full_hourly_df = pd.concat(all_hourly_dfs)
 
+    full_hourly_df.to_excel("output.xlsx", index=False)
+
     return results_by_year, full_hourly_df
