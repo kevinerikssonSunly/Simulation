@@ -81,7 +81,6 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
 def plot_energy_stack_st_altair(df):
     df_plot = df.copy()
     df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged"]].fillna(0)
-
     df_plot["direct_to_bl"] = np.minimum(df_plot["produced_energy"], df_plot["baseload"])
 
     df_plot["battery_to_bl"] = np.minimum(
