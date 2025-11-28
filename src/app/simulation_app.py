@@ -50,6 +50,11 @@ simulation_mode = st.sidebar.radio(
     ["Manual Input", "Upload File (Batch Mode)"]
 )
 
+curve_mode = st.sidebar.radio(
+    "Select Curve",
+    ["Baseload", "Consumption Curve"]
+)
+
 profile_type = st.sidebar.radio("Select country", list(profile_files.keys()))
 profile_file = profile_files[profile_type]
 
@@ -73,10 +78,9 @@ def summarize_by_price_step(df: pd.DataFrame, price_col: str = "Spot", step: int
         .sort_values(["year", "price_bin"])
     )
     return summary
-def plot_energy_stack_st_altair(df, baseload_value):
+def plot_energy_stack_st_altair(df):
     df_plot = df.copy()
     df_plot = df_plot[["produced_energy", "battery_discharged", "battery_charged"]].fillna(0)
-    df_plot["baseload"] = baseload_value
 
     df_plot["direct_to_bl"] = np.minimum(df_plot["produced_energy"], df_plot["baseload"])
 
@@ -333,6 +337,7 @@ if run_button_batch:
                 wind_cap = row["wind_cap"]
                 solar_cap = row["solar_cap"]
                 baseload = row["baseload"]
+                is_baseload_mode = (curve_mode == "Baseload")
                 wind_price = row["wind_price"]
                 solar_price = row["solar_price"]
                 missing_energy_price = row["missing_energy_price"]
@@ -357,6 +362,7 @@ if run_button_batch:
                     wind_prod=wind_prod,
                     solar_prod=solar_prod,
                     baseload=baseload,
+                    is_baseload_mode=is_baseload_mode,
                     wind_cap=wind_cap,
                     solar_cap=solar_cap,
                     wind_price=wind_price,
@@ -397,13 +403,14 @@ if run_button_batch:
             st.dataframe(result_df)
 elif run_button_manual:
     with st.spinner("Running simulation..."):
-
+        is_baseload_mode = (curve_mode == "Baseload")
         wind_prod, solar_prod = get_profiles(wind_cap, solar_cap, profile_file)
         results, yearly_df = simulate_dispatch(
             profile_file=profile_file,
             wind_prod=wind_prod,
             solar_prod=solar_prod,
             baseload=baseload,
+            is_baseload_mode=is_baseload_mode,
             wind_cap=wind_cap,
             solar_cap=solar_cap,
             wind_price=wind_price,
@@ -541,7 +548,7 @@ elif run_button_manual:
                 yearly_df_year = yearly_df[yearly_df.index.year == year]
                 year_data = summary_df[summary_df["year"] == year].set_index("price_bin")
 
-                st.altair_chart(plot_energy_stack_st_altair(yearly_df_year, baseload_value=baseload),
+                st.altair_chart(plot_energy_stack_st_altair(yearly_df_year),
                                 use_container_width=True)
                 year_data_reset = year_data.reset_index()
 

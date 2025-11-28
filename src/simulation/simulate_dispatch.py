@@ -15,6 +15,7 @@ def simulate_dispatch(
     wind_prod,
     solar_prod,
     baseload: float,
+    is_baseload_mode: bool,
     wind_cap: float,
     solar_cap: float,
     wind_price: float,
@@ -60,7 +61,7 @@ def simulate_dispatch(
         metrics = init_metrics(wind_price, solar_price, battery_1h_price, battery_2h_price, battery_4h_price, battery_6h_price, battery_8h_price, battery_12h_price, missing_energy_price)
 
         result, hourly_df = simulate_year_dispatch(metrics, year, wind_prod_year, solar_prod_year, df,
-                                                       storages, baseload, wind_cap, solar_cap, battery_config)
+                                                       storages, baseload, is_baseload_mode, wind_cap, solar_cap, battery_config)
 
         total_storage_cost = sum([
             battery_1h_price,

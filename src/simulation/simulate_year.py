@@ -1,4 +1,6 @@
 from typing import Dict, Any, List
+
+import numpy as np
 import pandas as pd
 
 from interfaces.StorageUnit import StorageUnit
@@ -10,14 +12,16 @@ def simulate_year_dispatch(
     year: int,
     wind_year: pd.Series,
     solar_year: pd.Series,
-    spot_prices: pd.DataFrame,
+    df: pd.DataFrame,
     storages: List[StorageUnit],
     baseload: float,
+    is_baseload_mode: bool,
     wind_cap: float,
     solar_cap: float,
     battery_config: Dict[int, float],
 ) -> tuple[Dict, pd.DataFrame]:
     total_hours = len(wind_year)
+    cnp_avg = np.sum(df["cnp"], axis=0) / total_hours
     wind_total = wind_year.sum()
     solar_total = solar_year.sum()
 
@@ -28,9 +32,10 @@ def simulate_year_dispatch(
         wind = round(wind_year.iloc[hour], 3)
         solar = round(solar_year.iloc[hour], 3)
         timestamp = wind_year.index[hour]
-        spot = spot_prices.loc[timestamp, "spot"]
+        spot = df.loc[timestamp, "spot"]
+        cnp = df.loc[timestamp, "cnp"]
 
-        result, cycle_loss = simulate_hour(wind, solar, storages, baseload, timestamp, metrics)
+        result, cycle_loss = simulate_hour(wind, solar, storages, baseload, cnp, cnp_avg, is_baseload_mode, timestamp, metrics)
         result["timestamp"] = timestamp
         result["Spot"] = spot
 
@@ -111,6 +116,9 @@ def simulate_hour(
     solar: float,
     storages: List[StorageUnit],
     baseload: float,
+    cnp: float,
+    cnp_avg: float,
+    is_baseload_mode: bool,
     timestamp: pd.Timestamp,
     metrics: Dict
 ) -> tuple[Dict[str, float], float]:
@@ -121,6 +129,9 @@ def simulate_hour(
     cycle_loss_total = 0.0
     discharged_total = 0.0
     charged_total = 0.0
+
+    if not is_baseload_mode:
+        baseload *= cnp / cnp_avg
 
     if total_gen >= baseload:
         wind_in_baseload, solar_in_baseload = share_allocation(wind, solar, baseload)
@@ -193,4 +204,5 @@ def simulate_hour(
         "excess_energy": excess_energy,
         "wind_total": wind,
         "solar_total": solar,
+        "baseload": baseload
     }, cycle_loss_total
