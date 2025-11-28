@@ -74,10 +74,10 @@ def simulate_dispatch(
 
         excess_energy = result["Excess wind, MWh"] + result["Excess solar, MWh"]
         #redundant_energy = result["Redundant wind, MWh"] + result["Redundant solar, MWh"]
-        bl_price_1 = calculate_bl_price_1(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"],
+        bl_price_1 = calculate_bl_price_1(result["Wind in demand, MWh"], wind_price, result["Solar in demand, MWh"],
                                           solar_price, total_storage_cost, result["Missing energy, MWh"],
                                           missing_energy_price, baseload * len(wind_prod_year))
-        bl_price_2 = calculate_bl_price_2(result["Wind in BL, MWh"], wind_price, result["Solar in BL, MWh"],
+        bl_price_2 = calculate_bl_price_2(result["Wind in demand, MWh"], wind_price, result["Solar in demand, MWh"],
                                           solar_price, total_storage_cost, result["Missing energy, MWh"],
                                           result["Missing energy VWAP, EUR/MWh"], baseload * len(wind_prod_year))
 
@@ -108,8 +108,8 @@ def simulate_dispatch(
             baseload * len(wind_prod_year)
         )
 
-        result["BL 1 - Fixed Missing EUR/MWh"] = round(bl_price_1)
-        result["BL 2 - VWAP Missing EUR/MWh"] = round(bl_price_2)
+        result["Demand 1 - Fixed Missing EUR/MWh"] = round(bl_price_1)
+        result["Demand 2 - VWAP Missing EUR/MWh"] = round(bl_price_2)
         result["Break-even 1 - Fixed Missing, EUR/MWh"] = round(brake_even_1)
         result["Break-even 2 - VWAP Missing, EUR/MWh"] = round(brake_even_2)
         result["Break-even 3 - Excess En. Price Fixed 0, EUR/MWh"] = round(brake_even_3)
@@ -152,7 +152,5 @@ def simulate_dispatch(
             if hasattr(s, "reset_yearly_zero_hours"): s.reset_yearly_zero_hours()
 
     full_hourly_df = pd.concat(all_hourly_dfs)
-
-    full_hourly_df.to_excel("output.xlsx", index=False)
 
     return results_by_year, full_hourly_df

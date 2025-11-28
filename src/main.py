@@ -12,7 +12,7 @@ if __name__ == "__main__":
     run_all_scenarios(PROFILES_EE, wind_profile, solar_profile, 40)
 
 '''
-    baseload = 40#input("Enter baseload (MW): ")
+    baseload = 40#input("Enter demand (MW): ")
     wind_cap = 183#input("Wind Capacity (MW)")
     solar_cap = 40#input("Solar Capacity (MW)")
     battery_1h = 0#input("1h Battery Capacity (MW)")

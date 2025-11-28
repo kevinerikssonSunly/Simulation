@@ -47,6 +47,7 @@ def run_all_scenarios(
         battery_12h_mw= 0,
         bess_rte = 0.86
     )
+    print(list(results.columns))
     df = pd.DataFrame(results)
     append_to_excel(df, output_path)
 
